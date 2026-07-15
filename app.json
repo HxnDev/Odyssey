@@ -1,0 +1,52 @@
+{
+  "expo": {
+    "name": "Odyssey",
+    "slug": "odyssey",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "icon": "./assets/images/icon.png",
+    "scheme": "odyssey",
+    "userInterfaceStyle": "automatic",
+    "android": {
+      "package": "com.hxndev.odyssey",
+      "adaptiveIcon": {
+        "backgroundColor": "#FAF6EF",
+        "foregroundImage": "./assets/images/android-icon-foreground.png",
+        "backgroundImage": "./assets/images/android-icon-background.png",
+        "monochromeImage": "./assets/images/android-icon-monochrome.png"
+      },
+      "predictiveBackGestureEnabled": false
+    },
+    "web": {
+      "output": "static",
+      "favicon": "./assets/images/favicon.png"
+    },
+    "plugins": [
+      "expo-router",
+      [
+        "expo-splash-screen",
+        {
+          "backgroundColor": "#FAF6EF",
+          "image": "./assets/images/splash-icon.png",
+          "imageWidth": 120,
+          "dark": {
+            "backgroundColor": "#10201F"
+          }
+        }
+      ],
+      "@maplibre/maplibre-react-native",
+      "expo-secure-store",
+      "expo-web-browser"
+    ],
+    "experiments": {
+      "typedRoutes": true
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "23127d40-d3ff-4b9a-8e8c-2f40d490227f"
+      }
+    },
+    "owner": "hxndev"
+  }
+}
