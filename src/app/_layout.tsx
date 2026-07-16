@@ -1,9 +1,9 @@
 import "@/global.css";
 
 import {
-  Fraunces_600SemiBold,
-  Fraunces_900Black,
-} from "@expo-google-fonts/fraunces";
+  SpaceGrotesk_600SemiBold,
+  SpaceGrotesk_700Bold,
+} from "@expo-google-fonts/space-grotesk";
 import {
   Inter_400Regular,
   Inter_500Medium,
@@ -12,7 +12,9 @@ import {
   useFonts,
 } from "@expo-google-fonts/inter";
 import { BottomSheetModalProvider } from "@gorhom/bottom-sheet";
-import { QueryClientProvider } from "@tanstack/react-query";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { createAsyncStoragePersister } from "@tanstack/query-async-storage-persister";
+import { PersistQueryClientProvider } from "@tanstack/react-query-persist-client";
 import { Stack } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { StatusBar } from "expo-status-bar";
@@ -55,7 +57,13 @@ function RootNavigator() {
       >
         <Stack.Protected guard={!!session}>
           <Stack.Screen name="(tabs)" />
+          <Stack.Screen name="countries" />
+          <Stack.Screen name="stats" />
           <Stack.Screen name="country/[iso]" />
+          <Stack.Screen name="city/[id]" />
+          <Stack.Screen name="trip/new" />
+          <Stack.Screen name="trip/[id]" />
+          <Stack.Screen name="stamps" />
         </Stack.Protected>
         <Stack.Protected guard={!session}>
           <Stack.Screen name="(auth)" />
@@ -65,10 +73,16 @@ function RootNavigator() {
   );
 }
 
+// Query cache persists to AsyncStorage so travel data stays viewable offline.
+const queryPersister = createAsyncStoragePersister({
+  storage: AsyncStorage,
+  key: "odyssey-query-cache",
+});
+
 export default function RootLayout() {
   const [fontsLoaded] = useFonts({
-    Fraunces_600SemiBold,
-    Fraunces_900Black,
+    SpaceGrotesk_600SemiBold,
+    SpaceGrotesk_700Bold,
     Inter_400Regular,
     Inter_500Medium,
     Inter_600SemiBold,
@@ -80,13 +94,16 @@ export default function RootLayout() {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <SafeAreaProvider>
-        <QueryClientProvider client={queryClient}>
+        <PersistQueryClientProvider
+          client={queryClient}
+          persistOptions={{ persister: queryPersister, maxAge: 7 * 24 * 60 * 60 * 1000 }}
+        >
           <AuthProvider>
             <BottomSheetModalProvider>
               <RootNavigator />
             </BottomSheetModalProvider>
           </AuthProvider>
-        </QueryClientProvider>
+        </PersistQueryClientProvider>
       </SafeAreaProvider>
     </GestureHandlerRootView>
   );

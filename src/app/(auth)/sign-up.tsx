@@ -54,7 +54,7 @@ export default function SignUpScreen() {
         </AppText>
         <Link href="/(auth)/sign-in" asChild>
           <Pressable>
-            <AppText variant="label" className="text-teal dark:text-teal-dark">
+            <AppText variant="label" className="text-primary dark:text-primary-dark">
               Back to sign in
             </AppText>
           </Pressable>
@@ -138,7 +138,7 @@ export default function SignUpScreen() {
           <AppText variant="label">Already have an account?</AppText>
           <Link href="/(auth)/sign-in" asChild>
             <Pressable>
-              <AppText variant="label" className="text-teal dark:text-teal-dark">
+              <AppText variant="label" className="text-primary dark:text-primary-dark">
                 Sign in
               </AppText>
             </Pressable>

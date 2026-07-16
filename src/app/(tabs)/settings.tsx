@@ -1,6 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useState } from "react";
-import { Alert, ScrollView, View } from "react-native";
+import { Alert, ScrollView, Share, View } from "react-native";
+import { supabase } from "@/lib/supabase";
 import { AppText } from "@/components/ui/AppText";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
@@ -24,6 +25,39 @@ export default function SettingsScreen() {
   const setTheme = usePreferences((s) => s.setTheme);
   const [signingOut, setSigningOut] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [exporting, setExporting] = useState(false);
+
+  const onExport = async () => {
+    setExporting(true);
+    try {
+      const [countryVisits, cityVisits, trips, tripStops] = await Promise.all([
+        supabase.from("country_visits").select("*"),
+        supabase.from("city_visits").select("*"),
+        supabase.from("trips").select("*"),
+        supabase.from("trip_stops").select("*"),
+      ]);
+      const firstError =
+        countryVisits.error ?? cityVisits.error ?? trips.error ?? tripStops.error;
+      if (firstError) throw firstError;
+
+      const payload = {
+        exportedAt: new Date().toISOString(),
+        app: "Odyssey",
+        countryVisits: countryVisits.data,
+        cityVisits: cityVisits.data,
+        trips: trips.data,
+        tripStops: tripStops.data,
+      };
+      await Share.share({
+        title: "Odyssey travel data",
+        message: JSON.stringify(payload, null, 2),
+      });
+    } catch (error) {
+      Alert.alert("Export failed", error instanceof Error ? error.message : "Try again.");
+    } finally {
+      setExporting(false);
+    }
+  };
 
   const onSignOut = async () => {
     setSigningOut(true);
@@ -71,8 +105,8 @@ export default function SettingsScreen() {
         </AppText>
 
         <Card className="flex-row items-center gap-3">
-          <View className="h-12 w-12 items-center justify-center rounded-full bg-teal-soft dark:bg-teal-dark-soft">
-            <Ionicons name="person" size={22} color={colors.teal} />
+          <View className="h-12 w-12 items-center justify-center rounded-full bg-primary-soft dark:bg-primary-dark-soft">
+            <Ionicons name="person" size={22} color={colors.primary} />
           </View>
           <View className="flex-1">
             <AppText variant="heading" className="text-base">
@@ -96,6 +130,19 @@ export default function SettingsScreen() {
               />
             ))}
           </View>
+        </Card>
+
+        <Card className="gap-3">
+          <AppText variant="heading">Data</AppText>
+          <Button
+            title="Export my travel data"
+            variant="secondary"
+            loading={exporting}
+            onPress={onExport}
+          />
+          <AppText variant="caption">
+            Exports all countries, cities and trips as JSON.
+          </AppText>
         </Card>
 
         <Card className="gap-3">

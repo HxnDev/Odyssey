@@ -71,7 +71,7 @@ export default function ForgotPasswordScreen() {
 
         <Link href="/(auth)/sign-in" asChild>
           <Pressable className="self-center">
-            <AppText variant="label" className="text-teal dark:text-teal-dark">
+            <AppText variant="label" className="text-primary dark:text-primary-dark">
               Back to sign in
             </AppText>
           </Pressable>

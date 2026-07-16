@@ -10,7 +10,7 @@ export default function TabsLayout() {
     <Tabs
       screenOptions={{
         headerShown: false,
-        tabBarActiveTintColor: colors.teal,
+        tabBarActiveTintColor: colors.primary,
         tabBarInactiveTintColor: colors.inkFaint,
         tabBarStyle: {
           backgroundColor: colors.paperRaised,
@@ -27,10 +27,10 @@ export default function TabsLayout() {
         }}
       />
       <Tabs.Screen
-        name="countries"
+        name="trips"
         options={{
-          title: "Countries",
-          tabBarIcon: ({ color, size }) => <Ionicons name="flag" size={size} color={color} />,
+          title: "Trips",
+          tabBarIcon: ({ color, size }) => <Ionicons name="briefcase" size={size} color={color} />,
         }}
       />
       <Tabs.Screen

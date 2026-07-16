@@ -29,7 +29,7 @@ export function Chip({ label, selected, onPress, selectedColor, className }: Chi
       className={cn(
         "rounded-chip border px-4 py-2",
         selected
-          ? "border-teal bg-teal dark:border-teal-dark dark:bg-teal-dark"
+          ? "border-primary bg-primary dark:border-primary-dark dark:bg-primary-dark"
           : "border-line bg-paper-raised dark:border-line-dark dark:bg-paper-dark-raised",
         className,
       )}

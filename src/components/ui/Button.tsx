@@ -7,7 +7,7 @@ import { useTheme } from "@/hooks/useTheme";
 type Variant = "primary" | "secondary" | "ghost" | "danger";
 
 const containerClasses: Record<Variant, string> = {
-  primary: "bg-teal dark:bg-teal-dark",
+  primary: "bg-primary dark:bg-primary-dark",
   secondary: "bg-paper-sunken dark:bg-paper-dark-raised border border-line dark:border-line-dark",
   ghost: "bg-transparent",
   danger: "bg-danger dark:bg-danger-dark",
@@ -16,7 +16,7 @@ const containerClasses: Record<Variant, string> = {
 const textClasses: Record<Variant, string> = {
   primary: "text-white dark:text-paper-dark font-sans-semibold",
   secondary: "text-ink dark:text-ink-dark font-sans-semibold",
-  ghost: "text-teal dark:text-teal-dark font-sans-semibold",
+  ghost: "text-primary dark:text-primary-dark font-sans-semibold",
   danger: "text-white dark:text-paper-dark font-sans-semibold",
 };
 
@@ -39,7 +39,7 @@ export function Button({ title, variant = "primary", loading, disabled, classNam
       ? isDark
         ? colors.paper
         : "#FFFFFF"
-      : colors.teal;
+      : colors.primary;
 
   return (
     <AnimatedPressable

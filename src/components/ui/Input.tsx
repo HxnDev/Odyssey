@@ -35,7 +35,7 @@ export const Input = forwardRef<TextInput, InputProps>(function Input(
           "rounded-2xl border bg-paper-raised px-4 py-3.5 font-sans text-base text-ink",
           "dark:bg-paper-dark-raised dark:text-ink-dark",
           focused
-            ? "border-teal dark:border-teal-dark"
+            ? "border-primary dark:border-primary-dark"
             : "border-line dark:border-line-dark",
           error && "border-danger dark:border-danger-dark",
         )}

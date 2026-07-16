@@ -1,53 +1,56 @@
 /**
- * Sunfaded Atlas — design tokens.
+ * "Sunset Orange" — Odyssey's signature theme.
+ * Vibrant sunset orange on clean white; warm ember-black dark mode.
  * Mirrors tailwind.config.js so native components (map layers, navigators,
  * status bars) can consume the same palette outside of className strings.
  */
 
 export const palette = {
   light: {
-    paper: "#FAF6EF",
+    paper: "#FFFFFF",
     paperRaised: "#FFFFFF",
-    paperSunken: "#F1EADD",
-    ink: "#2C2318",
-    inkSoft: "#5C5142",
-    inkFaint: "#8A7D69",
-    teal: "#0F6B66",
-    tealSoft: "#DDEBE9",
-    tealStrong: "#0A4B47",
-    terracotta: "#C4593A",
-    terracottaSoft: "#F5E3DC",
-    gold: "#B8912C",
-    goldSoft: "#F3EAD1",
+    paperSunken: "#F7F4F1",
+    ink: "#1B1410",
+    inkSoft: "#5D4F44",
+    inkFaint: "#A3948A",
+    primary: "#FF6B00",
+    primarySoft: "#FFF0E3",
+    primaryStrong: "#E25800",
+    coral: "#E8175D",
+    coralSoft: "#FDE8F0",
+    gold: "#F5A623",
+    goldSoft: "#FEF3DE",
     slate: "#64798A",
-    slateSoft: "#E4E9ED",
-    line: "#E4DCCC",
-    danger: "#B33A3A",
-    ocean: "#E8EFE9",
-    landUnvisited: "#EFE7D8",
-    border: "#C9BFA9",
+    slateSoft: "#EBF0F4",
+    line: "#F0EAE4",
+    danger: "#E5484D",
+    ocean: "#F7F4F0",
+    landUnvisited: "#E8E1D9",
+    border: "#FFFFFF",
+    mapLabel: "#7C7168",
   },
   dark: {
-    paper: "#10201F",
-    paperRaised: "#1A2E2C",
-    paperSunken: "#0B1817",
-    ink: "#EDE6D9",
-    inkSoft: "#B8AE9D",
-    inkFaint: "#847C6E",
-    teal: "#3FA39C",
-    tealSoft: "#173B39",
-    tealStrong: "#5FC2BA",
-    terracotta: "#E07A5A",
-    terracottaSoft: "#3B241D",
-    gold: "#D6B45A",
-    goldSoft: "#332B14",
+    paper: "#15100B",
+    paperRaised: "#211914",
+    paperSunken: "#191310",
+    ink: "#F8F4F0",
+    inkSoft: "#C7B8AC",
+    inkFaint: "#7A6C60",
+    primary: "#FF8A3D",
+    primarySoft: "#3B2410",
+    primaryStrong: "#FFA262",
+    coral: "#FF4F8B",
+    coralSoft: "#3B1226",
+    gold: "#FFB84D",
+    goldSoft: "#332812",
     slate: "#8FA5B5",
-    slateSoft: "#22303A",
-    line: "#28403D",
-    danger: "#E06C6C",
-    ocean: "#0B1A19",
-    landUnvisited: "#1C2F2D",
-    border: "#33504C",
+    slateSoft: "#20262E",
+    line: "#2E251E",
+    danger: "#FF6369",
+    ocean: "#15100B",
+    landUnvisited: "#2B231C",
+    border: "#15100B",
+    mapLabel: "#8E7F72",
   },
 } as const;
 
@@ -56,9 +59,9 @@ export type Palette = { [K in keyof (typeof palette)["light"]]: string };
 
 /** Country status → map fill + UI accent colors */
 export const statusColors = {
-  visited: { light: "#0F6B66", dark: "#3FA39C" },
-  lived: { light: "#C4593A", dark: "#E07A5A" },
-  wishlist: { light: "#B8912C", dark: "#D6B45A" },
+  visited: { light: "#FF6B00", dark: "#FF8A3D" },
+  lived: { light: "#E8175D", dark: "#FF4F8B" },
+  wishlist: { light: "#0FA5A0", dark: "#2BC5BF" },
   transit: { light: "#64798A", dark: "#8FA5B5" },
 } as const;
 
@@ -74,8 +77,8 @@ export const statusLabels: Record<CountryStatus, string> = {
 };
 
 export const fonts = {
-  display: "Fraunces_600SemiBold",
-  displayBlack: "Fraunces_900Black",
+  display: "SpaceGrotesk_600SemiBold",
+  displayBlack: "SpaceGrotesk_700Bold",
   sans: "Inter_400Regular",
   sansMedium: "Inter_500Medium",
   sansSemibold: "Inter_600SemiBold",

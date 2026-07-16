@@ -31,9 +31,18 @@ export default function CountriesScreen() {
   return (
     <Screen>
       <View className="gap-4 px-4 pb-3 pt-2">
-        <AppText variant="display" className="text-3xl">
-          Countries
-        </AppText>
+        <View className="flex-row items-center gap-3">
+          <Pressable
+            onPress={() => router.back()}
+            hitSlop={8}
+            className="h-10 w-10 items-center justify-center rounded-full bg-paper-sunken dark:bg-paper-dark-sunken"
+          >
+            <Ionicons name="arrow-back" size={20} color={colors.ink} />
+          </Pressable>
+          <AppText variant="display" className="text-3xl">
+            Countries
+          </AppText>
+        </View>
 
         <View className="flex-row items-center gap-2 rounded-2xl border border-line bg-paper-raised px-4 dark:border-line-dark dark:bg-paper-dark-raised">
           <Ionicons name="search" size={18} color={colors.inkFaint} />

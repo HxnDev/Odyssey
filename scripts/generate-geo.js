@@ -15,6 +15,37 @@ const byCcn3 = new Map(worldCountries.map((c) => [c.ccn3, c]));
 
 const geo = topojson.feature(worldAtlas, worldAtlas.objects.countries);
 
+/**
+ * topojson.feature re-stitches polygons that Natural Earth had split at the
+ * antimeridian (Russia, Fiji, Antarctica). The resulting rings jump from
+ * +180 to -180, which MapLibre draws as a horizontal streak across the whole
+ * world. Unwrap those jumps so rings stay continuous (lng may exceed 180;
+ * MapLibre renders that correctly across the date line).
+ */
+function unwrapRing(ring) {
+  let offset = 0;
+  let prev = null;
+  return ring.map(([lng, lat]) => {
+    if (prev !== null) {
+      if (lng + offset - prev > 180) offset -= 360;
+      else if (lng + offset - prev < -180) offset += 360;
+    }
+    const adjusted = lng + offset;
+    prev = adjusted;
+    return [adjusted, lat];
+  });
+}
+
+function unwrapGeometry(geometry) {
+  if (geometry.type === "Polygon") {
+    return { ...geometry, coordinates: geometry.coordinates.map(unwrapRing) };
+  }
+  if (geometry.type === "MultiPolygon") {
+    return { ...geometry, coordinates: geometry.coordinates.map((poly) => poly.map(unwrapRing)) };
+  }
+  return geometry;
+}
+
 const features = [];
 let skipped = 0;
 for (const f of geo.features) {
@@ -27,7 +58,7 @@ for (const f of geo.features) {
     type: "Feature",
     id: meta.cca2,
     properties: { iso: meta.cca2, name: meta.name.common },
-    geometry: f.geometry,
+    geometry: unwrapGeometry(f.geometry),
   });
 }
 

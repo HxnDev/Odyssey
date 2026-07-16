@@ -1,20 +1,52 @@
-import { ScrollView, View } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
+import { useRouter } from "expo-router";
+import { useMemo } from "react";
+import { Pressable, ScrollView, View } from "react-native";
 import { AppText } from "@/components/ui/AppText";
 import { Card } from "@/components/ui/Card";
 import { Screen } from "@/components/ui/Screen";
-import { CONTINENTS, countries, TOTAL_COUNTRIES } from "@/features/countries/data";
+import { useCityVisits } from "@/features/cities/queries";
+import { countryByIso } from "@/features/countries/data";
 import { useCountryVisits } from "@/features/countries/queries";
+import { MiniWorldMap } from "@/features/passport/MiniWorldMap";
+import { PassportHero } from "@/features/passport/PassportHero";
+import { Stamp } from "@/features/stamps/Stamp";
+import { computeStats } from "@/features/stats/compute";
+import { useTrips } from "@/features/trips/queries";
+import { useTheme } from "@/hooks/useTheme";
+import { todayIso } from "@/lib/dates";
+import type { CountryStatus } from "@/lib/theme";
 
 export default function PassportScreen() {
-  const { data: visits = [] } = useCountryVisits();
+  const router = useRouter();
+  const { colors } = useTheme();
+  const { data: countryVisits = [] } = useCountryVisits();
+  const { data: cityVisits = [] } = useCityVisits();
+  const { data: trips = [] } = useTrips();
 
-  const visitedIsos = new Set(
-    visits.filter((v) => v.status === "visited" || v.status === "lived").map((v) => v.country_iso),
+  const stats = useMemo(
+    () => computeStats(countryVisits, cityVisits, trips, todayIso()),
+    [countryVisits, cityVisits, trips],
   );
-  const visitedCountries = countries.filter((c) => visitedIsos.has(c.iso));
-  const continentsVisited = new Set(visitedCountries.map((c) => c.continent));
-  const worldPercent =
-    TOTAL_COUNTRIES > 0 ? Math.round((visitedIsos.size / TOTAL_COUNTRIES) * 100) : 0;
+
+  const myCountries = useMemo(
+    () =>
+      countryVisits
+        .filter((v) => v.status === "visited" || v.status === "lived")
+        .map((v) => countryByIso.get(v.country_iso))
+        .filter((c): c is NonNullable<typeof c> => !!c)
+        .sort((a, b) => a.name.localeCompare(b.name)),
+    [countryVisits],
+  );
+
+  const stampPreview = useMemo(
+    () =>
+      countryVisits
+        .filter((v) => v.status === "visited" || v.status === "lived")
+        .slice(0, 3)
+        .map((v) => ({ visit: v, country: countryByIso.get(v.country_iso) })),
+    [countryVisits],
+  );
 
   return (
     <Screen>
@@ -23,61 +55,104 @@ export default function PassportScreen() {
           Passport
         </AppText>
 
-        <View className="flex-row gap-3">
-          <Card className="flex-1 items-center py-6">
-            <AppText variant="display" className="text-4xl">
-              {visitedIsos.size}
-            </AppText>
-            <AppText variant="label">Countries</AppText>
-          </Card>
-          <Card className="flex-1 items-center py-6">
-            <AppText variant="display" className="text-4xl">
-              {worldPercent}%
-            </AppText>
-            <AppText variant="label">of the world</AppText>
-          </Card>
-        </View>
-
-        <Card>
-          <AppText variant="heading" className="mb-3">
-            Continents
-          </AppText>
-          <View className="gap-2.5">
-            {CONTINENTS.map((continent) => {
-              const total = countries.filter((c) => c.continent === continent).length;
-              const visited = visitedCountries.filter((c) => c.continent === continent).length;
-              const percent = total > 0 ? visited / total : 0;
-              return (
-                <View key={continent} className="gap-1">
-                  <View className="flex-row justify-between">
-                    <AppText variant="label">{continent}</AppText>
-                    <AppText variant="caption">
-                      {visited}/{total}
-                    </AppText>
-                  </View>
-                  <View className="h-2 overflow-hidden rounded-chip bg-paper-sunken dark:bg-paper-dark-sunken">
-                    <View
-                      className="h-full rounded-chip bg-teal dark:bg-teal-dark"
-                      style={{ width: `${Math.max(percent * 100, visited > 0 ? 4 : 0)}%` }}
-                    />
-                  </View>
-                </View>
-              );
-            })}
+        {/* Hero card — tap for the full stats breakdown */}
+        <Pressable onPress={() => router.push("/stats")}>
+          <PassportHero stats={stats} />
+          <View className="mt-2 flex-row items-center justify-center gap-1">
+            <AppText variant="caption">Tap for detailed stats & yearly breakdown</AppText>
+            <Ionicons name="chevron-forward" size={12} color={colors.inkFaint} />
           </View>
+        </Pressable>
+
+        {/* World map postcard */}
+        <Card className="gap-3">
+          <Pressable
+            onPress={() => router.push("/(tabs)")}
+            className="flex-row items-center justify-between"
+          >
+            <AppText variant="heading">My world</AppText>
+            <View className="flex-row items-center gap-1">
+              <AppText variant="caption">Open map</AppText>
+              <Ionicons name="chevron-forward" size={14} color={colors.inkFaint} />
+            </View>
+          </Pressable>
+          <Pressable onPress={() => router.push("/(tabs)")}>
+            <MiniWorldMap visits={countryVisits} />
+          </Pressable>
         </Card>
 
-        <Card className="items-center gap-1 py-6">
-          <AppText className="text-3xl">🛂</AppText>
-          <AppText variant="heading">Stamps coming soon</AppText>
-          <AppText variant="caption" className="text-center">
-            Your digital passport stamps and full travel statistics arrive in the next phase.
-          </AppText>
+        {/* My countries */}
+        <Card className="gap-1">
+          <Pressable
+            onPress={() => router.push("/countries")}
+            className="flex-row items-center justify-between pb-2"
+          >
+            <View>
+              <AppText variant="heading">My countries</AppText>
+              <AppText variant="caption">Everywhere you&apos;ve been</AppText>
+            </View>
+            <Ionicons name="chevron-forward" size={16} color={colors.inkFaint} />
+          </Pressable>
+          {myCountries.length > 0 ? (
+            <>
+              {myCountries.slice(0, 4).map((country) => (
+                <Pressable
+                  key={country.iso}
+                  onPress={() => router.push(`/country/${country.iso}`)}
+                  className="flex-row items-center gap-3 border-t border-line py-2.5 dark:border-line-dark"
+                >
+                  <AppText className="text-xl">{country.flag}</AppText>
+                  <AppText variant="body" className="flex-1 font-sans-medium">
+                    {country.name}
+                  </AppText>
+                  <Ionicons name="chevron-forward" size={14} color={colors.inkFaint} />
+                </Pressable>
+              ))}
+              {myCountries.length > 4 ? (
+                <Pressable onPress={() => router.push("/countries")} className="border-t border-line pt-2.5 dark:border-line-dark">
+                  <AppText variant="label" className="text-primary dark:text-primary-dark">
+                    + {myCountries.length - 4} more
+                  </AppText>
+                </Pressable>
+              ) : null}
+            </>
+          ) : (
+            <AppText variant="caption">Tap countries on the map to build your list.</AppText>
+          )}
         </Card>
 
-        <AppText variant="caption" className="text-center">
-          {continentsVisited.size} of {CONTINENTS.length} continents explored
-        </AppText>
+        {/* Stamps preview */}
+        <Card>
+          <Pressable
+            onPress={() => router.push("/stamps")}
+            className="flex-row items-center justify-between"
+          >
+            <AppText variant="heading">Stamp collection</AppText>
+            <View className="flex-row items-center gap-1">
+              <AppText variant="caption">View all</AppText>
+              <Ionicons name="chevron-forward" size={14} color={colors.inkFaint} />
+            </View>
+          </Pressable>
+          {stampPreview.length > 0 ? (
+            <View className="mt-3 flex-row justify-around">
+              {stampPreview.map(({ visit, country }) =>
+                country ? (
+                  <Stamp
+                    key={visit.country_iso}
+                    country={country}
+                    status={visit.status as CountryStatus}
+                    date={visit.first_visit_date}
+                    size={100}
+                  />
+                ) : null,
+              )}
+            </View>
+          ) : (
+            <AppText variant="caption" className="mt-2">
+              Mark countries as Visited to start collecting stamps.
+            </AppText>
+          )}
+        </Card>
       </ScrollView>
     </Screen>
   );

@@ -2,7 +2,7 @@
 
 **Every journey matters.** A premium personal travel companion — your permanent archive of every place you've ever visited.
 
-Phase 1 + 2: foundation, design system, Supabase authentication, and an interactive world map with country statuses (visited / lived / wishlist / transit / favorite).
+Implemented (Phases 1–5): design system, Supabase auth, interactive world map with country statuses, city logging, multi-stop trips, passport statistics dashboard with charts, procedural passport stamps, offline cache and data export.
 
 ## Tech stack
 
@@ -37,7 +37,7 @@ npm install
 ### 2. Supabase
 
 1. Create a project at [supabase.com](https://supabase.com) (free tier is fine).
-2. In the dashboard, open **SQL Editor** and run the contents of `supabase/migrations/0001_init.sql`.
+2. In the dashboard, open **SQL Editor** and run the migrations in order: `supabase/migrations/0001_init.sql`, then `supabase/migrations/0002_trips_cities.sql`.
 3. Copy **Project Settings → API → Project URL** and **anon public key** into a `.env` file:
 
 ```bash
@@ -71,16 +71,13 @@ npx expo start
 
 Scan the QR code with the dev build. Day-to-day JS/UI changes never need a rebuild — only adding new native modules does.
 
-## Regenerating geo data
+## Regenerating bundled data
 
 ```bash
-node scripts/generate-geo.js
+node scripts/generate-geo.js     # world polygons + country dataset
+node scripts/generate-cities.js  # cities dataset (GeoNames, population >= 50k)
 ```
 
-Rebuilds `assets/geo/countries.geo.json` and `src/data/countries.json` from `world-atlas` + `world-countries`.
+## Roadmap (future vision)
 
-## Roadmap
-
-- **Phase 3** — Cities & trips (multi-stop itineraries, transport modes)
-- **Phase 4** — Passport statistics dashboard and charts
-- **Phase 5** — Passport stamps, offline sync, Play Store release
+Timeline with automatic GPS tracking, AI trip summaries, journal, memories, photo albums, expense tracker, packing lists, visa tracker, flight history, achievements — see the project feasibility report.
