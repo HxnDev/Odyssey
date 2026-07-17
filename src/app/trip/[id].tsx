@@ -1,8 +1,8 @@
 import { Ionicons } from "@expo/vector-icons";
 import { Image } from "expo-image";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { useState } from "react";
-import { ActivityIndicator, Alert, Pressable, ScrollView, TextInput, View } from "react-native";
+import { useRef, useState } from "react";
+import { ActivityIndicator, Alert, KeyboardAvoidingView, Pressable, ScrollView, TextInput, View } from "react-native";
 import { AppText } from "@/components/ui/AppText";
 import { Button } from "@/components/ui/Button";
 import { CalendarField } from "@/components/ui/CalendarField";
@@ -14,7 +14,7 @@ import { Input } from "@/components/ui/Input";
 import { useAuth } from "@/features/auth/AuthProvider";
 import { CityPicker, type PickedCity } from "@/features/cities/CityPicker";
 import { useAddCityVisit } from "@/features/cities/queries";
-import { FlightNumberField } from "@/features/flights/FlightNumberField";
+import { FlightsSection } from "@/features/flights/FlightsSection";
 import { useSetCountryStatus, useCountryVisits } from "@/features/countries/queries";
 import { deleteCoverPhoto, pickCoverPhoto, uploadCoverPhoto } from "@/features/trips/coverPhoto";
 import { StopCard } from "@/features/trips/StopCard";
@@ -48,6 +48,9 @@ export default function TripDetailScreen() {
   const addCityVisit = useAddCityVisit();
   const setCountryStatus = useSetCountryStatus();
 
+  const scrollRef = useRef<ScrollView>(null);
+  const scrollOffsetY = useRef(0);
+  const nameInputRef = useRef<TextInput>(null);
   const [pickerOpen, setPickerOpen] = useState(false);
   const [uploadingCover, setUploadingCover] = useState(false);
   const [highlights, setHighlights] = useState(trip?.highlights ?? "");
@@ -145,15 +148,48 @@ export default function TripDetailScreen() {
         <Pressable onPress={() => router.back()} className="p-2" accessibilityLabel="Go back">
           <Ionicons name="arrow-back" size={24} color={colors.ink} />
         </Pressable>
-        <AppText variant="title" className="flex-1" numberOfLines={1}>
-          {trip.name}
-        </AppText>
+        <TextInput
+          key={trip.id}
+          ref={nameInputRef}
+          defaultValue={trip.name}
+          onEndEditing={(e) => {
+            const name = e.nativeEvent.text.trim();
+            if (name && name !== trip.name) {
+              updateTrip.mutate({ id: trip.id, name });
+            } else if (!name) {
+              // Don't allow saving an empty name; restore the current one.
+              nameInputRef.current?.setNativeProps({ text: trip.name });
+            }
+          }}
+          returnKeyType="done"
+          style={{ fontFamily: fonts.display, fontSize: 24, color: colors.ink, padding: 0 }}
+          className="flex-1"
+          accessibilityLabel="Trip name"
+        />
+        <Pressable
+          onPress={() => nameInputRef.current?.focus()}
+          className="p-2"
+          accessibilityLabel="Rename trip"
+        >
+          <Ionicons name="pencil" size={18} color={colors.inkFaint} />
+        </Pressable>
         <Pressable onPress={onDelete} className="p-2" accessibilityLabel="Delete trip">
           <Ionicons name="trash-outline" size={22} color={colors.danger} />
         </Pressable>
       </View>
 
-      <ScrollView contentContainerClassName="gap-4 px-4 pb-10" keyboardShouldPersistTaps="handled">
+      {/* Edge-to-edge Android doesn't auto-resize for the keyboard, so pad
+          the scroll area manually or mid-page forms end up hidden. */}
+      <KeyboardAvoidingView behavior="padding" className="flex-1">
+      <ScrollView
+        ref={scrollRef}
+        onScroll={(e) => {
+          scrollOffsetY.current = e.nativeEvent.contentOffset.y;
+        }}
+        scrollEventThrottle={32}
+        contentContainerClassName="gap-4 px-4 pb-10"
+        keyboardShouldPersistTaps="handled"
+      >
         {/* Cover photo */}
         {trip.cover_photo_url ? (
           <View className="overflow-hidden rounded-card">
@@ -235,14 +271,6 @@ export default function TripDetailScreen() {
             value={trip.transport}
             onChange={(mode) => mode && updateTrip.mutate({ id: trip.id, transport: mode })}
           />
-          {trip.transport === "plane" ? (
-            <FlightNumberField
-              value={trip.flight_number}
-              onCommit={(flightNumber) =>
-                updateTrip.mutate({ id: trip.id, flight_number: flightNumber })
-              }
-            />
-          ) : null}
           <Input
             label="Trip group"
             placeholder="e.g. Japan 2026 — groups related trips together"
@@ -252,6 +280,10 @@ export default function TripDetailScreen() {
             }
           />
         </Card>
+
+        {trip.transport === "plane" ? (
+          <FlightsSection tripId={trip.id} scroll={{ ref: scrollRef, offsetY: scrollOffsetY }} />
+        ) : null}
 
         {/* Destinations: single-destination trips stay simple; per-stop dates
             and transport only appear once the journey has multiple legs. */}
@@ -315,6 +347,7 @@ export default function TripDetailScreen() {
           />
         ) : null}
       </ScrollView>
+      </KeyboardAvoidingView>
 
       <CityPicker
         visible={pickerOpen}

@@ -22,6 +22,7 @@ export function MiniWorldMap({ visits, height = 190 }: { visits: CountryVisitRow
   return (
     <View style={{ height }} pointerEvents="none" className="overflow-hidden rounded-2xl">
       <MapLibreMap
+        key={scheme}
         style={StyleSheet.absoluteFill}
         mapStyle={baseStyle}
         dragPan={false}

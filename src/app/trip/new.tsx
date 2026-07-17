@@ -8,7 +8,6 @@ import { CalendarField } from "@/components/ui/CalendarField";
 import { Card } from "@/components/ui/Card";
 import { Input } from "@/components/ui/Input";
 import { Screen } from "@/components/ui/Screen";
-import { FlightNumberField } from "@/features/flights/FlightNumberField";
 import { TransportPicker } from "@/features/trips/TransportPicker";
 import { useCreateTrip } from "@/features/trips/queries";
 import { useTheme } from "@/hooks/useTheme";
@@ -26,7 +25,6 @@ export default function NewTripScreen() {
   const [endDate, setEndDate] = useState<string | null>(null);
   const [coverEmoji, setCoverEmoji] = useState("✈️");
   const [groupName, setGroupName] = useState("");
-  const [flightNumber, setFlightNumber] = useState<string | null>(null);
   const [nameError, setNameError] = useState<string | undefined>();
 
   const onCreate = async () => {
@@ -46,7 +44,6 @@ export default function NewTripScreen() {
         end_date: endDate,
         cover_emoji: coverEmoji,
         group_name: groupName.trim() || null,
-        flight_number: transport === "plane" ? flightNumber : null,
       });
       router.replace(`/trip/${trip.id}`);
     } catch (error) {
@@ -92,7 +89,9 @@ export default function NewTripScreen() {
             onChange={(mode) => mode && setTransport(mode)}
           />
           {transport === "plane" ? (
-            <FlightNumberField value={flightNumber} onCommit={setFlightNumber} />
+            <AppText variant="caption">
+              You can add your flights (each leg, outbound and return) on the next screen.
+            </AppText>
           ) : null}
         </Card>
 

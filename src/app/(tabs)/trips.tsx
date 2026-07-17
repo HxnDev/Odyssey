@@ -1,16 +1,23 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
-import { useMemo, useState } from "react";
-import { FlatList, Pressable, TextInput, View } from "react-native";
+import { useMemo, useRef, useState } from "react";
+import { Modal, Pressable, TextInput, View } from "react-native";
+import Animated, {
+  useAnimatedRef,
+  useAnimatedScrollHandler,
+  useSharedValue,
+} from "react-native-reanimated";
 import { AppText } from "@/components/ui/AppText";
+import { Button } from "@/components/ui/Button";
 import { Chip } from "@/components/ui/Chip";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { Screen } from "@/components/ui/Screen";
+import { DraggableTripList, type DragScrollTarget } from "@/features/trips/DraggableTripList";
 import { TripCard } from "@/features/trips/TripCard";
-import { useAllTripStops, useTrips } from "@/features/trips/queries";
+import { useAllTripStops, useRenameTripGroup, useReorderTrips, useTrips } from "@/features/trips/queries";
 import { useTheme } from "@/hooks/useTheme";
 import type { TripRow } from "@/lib/database.types";
-import { daysBetween, formatIso, todayIso } from "@/lib/dates";
+import { daysBetween, formatRange, todayIso } from "@/lib/dates";
 import { fonts } from "@/lib/theme";
 
 type Filter = "all" | "upcoming" | "past" | "cancelled";
@@ -20,14 +27,45 @@ type ListItem =
   | { key: string; kind: "trip"; trip: TripRow }
   | { key: string; kind: "group"; name: string; trips: TripRow[] };
 
+/**
+ * Order trips inside a group: manual sort_order first (nulls sink to the
+ * bottom), then chronologically, then by creation time — so same-day trips
+ * keep the order they were added instead of going alphabetical.
+ */
+function groupOrder(a: TripRow, b: TripRow): number {
+  if (a.sort_order != null || b.sort_order != null) {
+    if (a.sort_order == null) return 1;
+    if (b.sort_order == null) return -1;
+    if (a.sort_order !== b.sort_order) return a.sort_order - b.sort_order;
+  }
+  const ad = a.start_date ?? "9999";
+  const bd = b.start_date ?? "9999";
+  if (ad !== bd) return ad < bd ? -1 : 1;
+  return a.created_at < b.created_at ? -1 : 1;
+}
+
 export default function TripsScreen() {
   const router = useRouter();
   const { colors } = useTheme();
   const [query, setQuery] = useState("");
   const [filter, setFilter] = useState<Filter>("all");
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
+  const [renamingGroup, setRenamingGroup] = useState<string | null>(null);
   const { data: trips = [] } = useTrips();
   const { data: allStops = [] } = useAllTripStops();
+  const renameGroup = useRenameTripGroup();
+
+  // Scroll plumbing so drag-to-reorder can auto-scroll near screen edges.
+  // Everything lives on the UI thread (shared values + scrollTo) so the
+  // dragged card and the scrolling list move in the same frame.
+  const listRef = useAnimatedRef<Animated.FlatList<ListItem>>();
+  const scrollOffset = useSharedValue(0);
+  const maxScrollOffset = useSharedValue(0);
+  const sizes = useRef({ content: 0, layout: 0 });
+  const onScroll = useAnimatedScrollHandler((e) => {
+    scrollOffset.set(e.contentOffset.y);
+  });
+  const dragScroll: DragScrollTarget = { listRef, offset: scrollOffset, maxOffset: maxScrollOffset };
 
   // First stop's country → flag on the trip card.
   const countryByTrip = useMemo(() => {
@@ -74,6 +112,7 @@ export default function TripsScreen() {
         entries.push({ key: trip.id, kind: "trip", trip });
       }
     }
+    for (const group of groups.values()) group.trips.sort(groupOrder);
 
     // "All" splits into Upcoming / Past / Cancelled sections like Been.
     if (filter !== "all") return entries;
@@ -84,7 +123,8 @@ export default function TripsScreen() {
       t.cancelled ? cancelled : !t.end_date || t.end_date >= today ? upcoming : past;
     for (const entry of entries) {
       if (entry.kind === "trip") bucket(entry.trip).push(entry);
-      else bucket(entry.trips[0]).push(entry);
+      // Groups are chronological, so the last trip decides upcoming vs past.
+      else bucket(entry.trips[entry.trips.length - 1]).push(entry);
     }
     // Upcoming reads soonest-first.
     upcoming.reverse();
@@ -101,6 +141,20 @@ export default function TripsScreen() {
       const next = new Set(prev);
       if (next.has(key)) next.delete(key);
       else next.add(key);
+      return next;
+    });
+  };
+
+  const onRenameGroup = (from: string, to: string) => {
+    setRenamingGroup(null);
+    if (!to || to === from) return;
+    renameGroup.mutate({ from, to });
+    // Keep the renamed group expanded under its new key.
+    setExpanded((prev) => {
+      if (!prev.has(`group:${from}`)) return prev;
+      const next = new Set(prev);
+      next.delete(`group:${from}`);
+      next.add(`group:${to}`);
       return next;
     });
   };
@@ -136,14 +190,25 @@ export default function TripsScreen() {
         </View>
       </View>
 
-      <FlatList
+      <Animated.FlatList
+        ref={listRef}
         data={items}
         keyExtractor={(item) => item.key}
+        onScroll={onScroll}
+        scrollEventThrottle={16}
+        onContentSizeChange={(_w, h) => {
+          sizes.current.content = h;
+          maxScrollOffset.set(Math.max(0, sizes.current.content - sizes.current.layout));
+        }}
+        onLayout={(e) => {
+          sizes.current.layout = e.nativeEvent.layout.height;
+          maxScrollOffset.set(Math.max(0, sizes.current.content - sizes.current.layout));
+        }}
         contentContainerClassName="flex-grow px-4 pb-8 pt-1"
         renderItem={({ item }) => {
           if (item.kind === "header") {
             return (
-              <AppText variant="label" className="pb-2 pt-2 font-sans-bold uppercase tracking-wider">
+              <AppText variant="caption" className="pb-2 pt-2 font-sans-semibold uppercase tracking-wider">
                 {item.title}
               </AppText>
             );
@@ -157,6 +222,8 @@ export default function TripsScreen() {
               countryByTrip={countryByTrip}
               expanded={expanded.has(item.key)}
               onToggle={() => toggleGroup(item.key)}
+              onRename={() => setRenamingGroup(item.name)}
+              dragScroll={dragScroll}
             />
           );
         }}
@@ -184,6 +251,14 @@ export default function TripsScreen() {
       >
         <Ionicons name="add" size={30} color="#FFFFFF" />
       </Pressable>
+
+      {renamingGroup != null ? (
+        <RenameGroupModal
+          name={renamingGroup}
+          onCancel={() => setRenamingGroup(null)}
+          onSave={(to) => onRenameGroup(renamingGroup, to)}
+        />
+      ) : null}
     </Screen>
   );
 }
@@ -193,13 +268,18 @@ function TripGroupCard({
   countryByTrip,
   expanded,
   onToggle,
+  onRename,
+  dragScroll,
 }: {
   group: { name: string; trips: TripRow[] };
   countryByTrip: Map<string, string>;
   expanded: boolean;
   onToggle: () => void;
+  onRename: () => void;
+  dragScroll: DragScrollTarget;
 }) {
   const { colors } = useTheme();
+  const reorderTrips = useReorderTrips();
   const starts = group.trips.map((t) => t.start_date).filter((d): d is string => !!d);
   const ends = group.trips.map((t) => t.end_date).filter((d): d is string => !!d);
   const from = starts.length ? starts.reduce((a, b) => (a < b ? a : b)) : null;
@@ -210,47 +290,97 @@ function TripGroupCard({
     <View className="mb-3">
       <Pressable
         onPress={onToggle}
-        style={{ elevation: 2, shadowColor: "#000", shadowOpacity: 0.06, shadowRadius: 8, shadowOffset: { width: 0, height: 2 } }}
-        className={`rounded-card border-2 bg-paper-raised p-4 dark:bg-paper-dark-raised ${
-          expanded
-            ? "border-primary dark:border-primary-dark"
-            : "border-primary/30 dark:border-primary-dark/30"
-        }`}
+        style={{ elevation: 1, shadowColor: "#000", shadowOpacity: 0.04, shadowRadius: 6, shadowOffset: { width: 0, height: 2 } }}
+        className="overflow-hidden rounded-card bg-paper-raised active:opacity-80 dark:bg-paper-dark-raised"
       >
-        <View className="flex-row items-center gap-3">
-          <View className="h-11 w-11 items-center justify-center rounded-xl bg-primary dark:bg-primary-dark">
-            <Ionicons name="albums" size={20} color="#FFFFFF" />
-          </View>
-          <View className="flex-1">
-            <View className="flex-row items-center gap-2">
-              <AppText variant="heading" className="text-base" numberOfLines={1}>
-                {group.name}
-              </AppText>
-              <View className="rounded-chip bg-primary-soft px-2 py-0.5 dark:bg-primary-dark-soft">
-                <AppText variant="caption" className="font-sans-bold text-primary-strong dark:text-primary-strong">
-                  {group.trips.length}
-                </AppText>
-              </View>
-            </View>
-            <AppText variant="caption">
-              {from ? `${formatIso(from)}${to ? ` – ${formatIso(to)}` : ""}` : "No dates"}
-              {totalDays ? ` · ${totalDays} days` : ""}
+        <View className="flex-row items-center justify-between px-4 pb-2.5 pt-3">
+          <View className="flex-row items-center gap-1.5">
+            <Ionicons name="calendar-clear-outline" size={12} color={colors.inkFaint} />
+            <AppText variant="caption" className="text-[13px]">
+              {formatRange(from, to)}
             </AppText>
           </View>
-          <Ionicons
-            name={expanded ? "chevron-up" : "chevron-down"}
-            size={18}
-            color={colors.inkFaint}
-          />
+          {totalDays ? (
+            <AppText variant="caption" className="text-[13px]">
+              Duration{" "}
+              <AppText variant="caption" className="font-sans-semibold text-[13px] text-primary-strong dark:text-primary-dark">
+                {totalDays} day{totalDays === 1 ? "" : "s"}
+              </AppText>
+            </AppText>
+          ) : null}
+        </View>
+
+        <View className="h-px bg-line dark:bg-line-dark" />
+
+        <View className="flex-row items-center gap-3 px-4 py-3">
+          <View className="h-8 w-11 items-center justify-center rounded-md bg-primary-soft dark:bg-primary-dark-soft">
+            <Ionicons name="albums-outline" size={16} color={colors.primary} />
+          </View>
+          <View className="flex-1 gap-0.5">
+            <AppText variant="caption">
+              {group.trips.length} trip{group.trips.length === 1 ? "" : "s"}
+            </AppText>
+            <AppText className="font-sans-medium text-[16px] text-ink dark:text-ink-dark" numberOfLines={1}>
+              {group.name}
+            </AppText>
+          </View>
+          {expanded ? (
+            <Pressable onPress={onRename} hitSlop={8} className="p-1" accessibilityLabel="Rename group">
+              <Ionicons name="pencil" size={15} color={colors.inkFaint} />
+            </Pressable>
+          ) : null}
+          <Ionicons name={expanded ? "chevron-up" : "chevron-down"} size={16} color={colors.inkFaint} />
         </View>
       </Pressable>
+
       {expanded ? (
-        <View className="mt-2 border-l-2 border-primary/30 pl-3 dark:border-primary-dark/30">
-          {group.trips.map((trip) => (
-            <TripCard key={trip.id} trip={trip} countryIso={countryByTrip.get(trip.id)} />
-          ))}
+        <View className="mt-2 pl-4">
+          <DraggableTripList
+            trips={group.trips}
+            countryByTrip={countryByTrip}
+            onReorder={(ids) => reorderTrips.mutate(ids)}
+            scroll={dragScroll}
+          />
         </View>
       ) : null}
     </View>
+  );
+}
+
+function RenameGroupModal({
+  name,
+  onCancel,
+  onSave,
+}: {
+  name: string;
+  onCancel: () => void;
+  onSave: (to: string) => void;
+}) {
+  const { colors } = useTheme();
+  const [value, setValue] = useState(name);
+
+  return (
+    <Modal transparent animationType="fade" onRequestClose={onCancel}>
+      <View className="flex-1 items-center justify-center bg-black/40 px-8">
+        <Pressable className="absolute inset-0" onPress={onCancel} />
+        <View className="w-full gap-4 rounded-card bg-paper-raised p-5 dark:bg-paper-dark-raised">
+          <AppText variant="heading">Rename group</AppText>
+          <TextInput
+            autoFocus
+            value={value}
+            onChangeText={setValue}
+            selectTextOnFocus
+            placeholder="Group name"
+            placeholderTextColor={colors.inkFaint}
+            style={{ fontFamily: fonts.sans, color: colors.ink }}
+            className="h-12 rounded-2xl border border-line bg-paper px-4 text-base dark:border-line-dark dark:bg-paper-dark"
+          />
+          <View className="flex-row justify-end gap-2">
+            <Button title="Cancel" variant="ghost" onPress={onCancel} />
+            <Button title="Save" onPress={() => onSave(value.trim())} disabled={!value.trim()} />
+          </View>
+        </View>
+      </View>
+    </Modal>
   );
 }

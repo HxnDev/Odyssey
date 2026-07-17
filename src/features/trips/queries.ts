@@ -39,7 +39,6 @@ export interface TripInput {
   cover_emoji: string;
   notes?: string | null;
   group_name?: string | null;
-  flight_number?: string | null;
 }
 
 export function useCreateTrip() {
@@ -74,6 +73,63 @@ export function useUpdateTrip() {
       const previous = queryClient.getQueryData<TripRow[]>(tripKeys.all);
       queryClient.setQueryData<TripRow[]>(tripKeys.all, (old = []) =>
         old.map((t) => (t.id === id ? { ...t, ...fields } : t)),
+      );
+      return { previous };
+    },
+    onError: (_err, _input, context) => {
+      if (context?.previous) queryClient.setQueryData(tripKeys.all, context.previous);
+    },
+    onSettled: () => queryClient.invalidateQueries({ queryKey: tripKeys.all }),
+  });
+}
+
+/** Renames a trip group by updating every trip that carries the old name. */
+export function useRenameTripGroup() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ from, to }: { from: string; to: string }) => {
+      const { error } = await supabase
+        .from("trips")
+        .update({ group_name: to })
+        .eq("group_name", from);
+      if (error) throw error;
+    },
+    onMutate: async ({ from, to }) => {
+      await queryClient.cancelQueries({ queryKey: tripKeys.all });
+      const previous = queryClient.getQueryData<TripRow[]>(tripKeys.all);
+      queryClient.setQueryData<TripRow[]>(tripKeys.all, (old = []) =>
+        old.map((t) => (t.group_name === from ? { ...t, group_name: to } : t)),
+      );
+      return { previous };
+    },
+    onError: (_err, _input, context) => {
+      if (context?.previous) queryClient.setQueryData(tripKeys.all, context.previous);
+    },
+    onSettled: () => queryClient.invalidateQueries({ queryKey: tripKeys.all }),
+  });
+}
+
+/** Persists a manual order for a set of trips (sort_order = array index). */
+export function useReorderTrips() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (orderedIds: string[]) => {
+      const results = await Promise.all(
+        orderedIds.map((id, index) =>
+          supabase.from("trips").update({ sort_order: index }).eq("id", id),
+        ),
+      );
+      const failed = results.find((r) => r.error);
+      if (failed?.error) throw failed.error;
+    },
+    onMutate: async (orderedIds) => {
+      await queryClient.cancelQueries({ queryKey: tripKeys.all });
+      const previous = queryClient.getQueryData<TripRow[]>(tripKeys.all);
+      const indexById = new Map(orderedIds.map((id, index) => [id, index]));
+      queryClient.setQueryData<TripRow[]>(tripKeys.all, (old = []) =>
+        old.map((t) => (indexById.has(t.id) ? { ...t, sort_order: indexById.get(t.id)! } : t)),
       );
       return { previous };
     },

@@ -64,6 +64,10 @@ export const WorldMap = forwardRef<CameraRef, WorldMapProps>(function WorldMap(
 
   return (
     <MapLibreMap
+      // Remount on theme change: swapping mapStyle in place makes MapLibre
+      // reload the style while the React-managed layers race it, leaving the
+      // map half-themed. A fresh native view rebuilds everything atomically.
+      key={scheme}
       style={StyleSheet.absoluteFill}
       mapStyle={baseStyle}
       touchRotate={false}

@@ -54,6 +54,8 @@ export type TripRow = {
   cover_photo_url: string | null;
   group_name: string | null;
   flight_number: string | null;
+  /** Manual position within a trip group; null = fall back to dates. */
+  sort_order: number | null;
   created_at: string;
   updated_at: string;
 };
@@ -71,6 +73,24 @@ export type TripStopRow = {
   departure_date: string | null;
   transport: string | null;
   notes: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+export type TripFlightRow = {
+  id: string;
+  trip_id: string;
+  user_id: string;
+  position: number;
+  flight_number: string;
+  flight_date: string | null;
+  dep_time: string | null;
+  arr_time: string | null;
+  airline: string | null;
+  origin_iata: string | null;
+  origin_city: string | null;
+  dest_iata: string | null;
+  dest_city: string | null;
   created_at: string;
   updated_at: string;
 };
@@ -133,6 +153,16 @@ export type Database = {
           country_iso: string;
         };
         Update: Partial<TripStopRow>;
+        Relationships: [];
+      };
+      trip_flights: {
+        Row: TripFlightRow;
+        Insert: Partial<TripFlightRow> & {
+          user_id: string;
+          trip_id: string;
+          flight_number: string;
+        };
+        Update: Partial<TripFlightRow>;
         Relationships: [];
       };
       city_visits: {

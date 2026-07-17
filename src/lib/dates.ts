@@ -23,6 +23,29 @@ export function formatIso(date: string | null | undefined): string {
   return `${MONTHS[d.getMonth()].slice(0, 3)} ${d.getDate()}, ${d.getFullYear()}`;
 }
 
+/**
+ * Compact date range, Been-style:
+ * "27–28 Jul 2026" · "27 Jul – 3 Aug 2026" · "28 Dec 2026 – 2 Jan 2027".
+ */
+export function formatRange(start: string | null, end: string | null): string {
+  const s = start ? parseIso(start) : null;
+  const e = end ? parseIso(end) : null;
+  const valid = (d: Date | null): d is Date => !!d && !Number.isNaN(d.getTime());
+  const day = (d: Date) => `${d.getDate()} ${MONTHS[d.getMonth()].slice(0, 3)} ${d.getFullYear()}`;
+
+  if (!valid(s) && !valid(e)) return "No dates";
+  if (!valid(s)) return day(e as Date);
+  if (!valid(e) || start === end) return day(s);
+
+  if (s.getFullYear() === e.getFullYear()) {
+    if (s.getMonth() === e.getMonth()) {
+      return `${s.getDate()}–${e.getDate()} ${MONTHS[s.getMonth()].slice(0, 3)} ${s.getFullYear()}`;
+    }
+    return `${s.getDate()} ${MONTHS[s.getMonth()].slice(0, 3)} – ${e.getDate()} ${MONTHS[e.getMonth()].slice(0, 3)} ${s.getFullYear()}`;
+  }
+  return `${day(s)} – ${day(e)}`;
+}
+
 /** Inclusive day count between two ISO dates; null when either is missing. */
 export function daysBetween(start: string | null, end: string | null): number | null {
   if (!start || !end) return null;
