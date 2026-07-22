@@ -24,6 +24,7 @@ import { View } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { AuthProvider, useAuth } from "@/features/auth/AuthProvider";
+import { useOtaUpdates } from "@/hooks/useOtaUpdates";
 import { useTheme } from "@/hooks/useTheme";
 import { queryClient } from "@/lib/queryClient";
 import { usePreferences } from "@/stores/preferences";
@@ -80,6 +81,8 @@ const queryPersister = createAsyncStoragePersister({
 });
 
 export default function RootLayout() {
+  useOtaUpdates();
+
   const [fontsLoaded] = useFonts({
     SpaceGrotesk_600SemiBold,
     SpaceGrotesk_700Bold,
