@@ -4,6 +4,7 @@
   "version": "1.0.0",
   "scripts": {
     "start": "expo start",
+    "start:dev": "APP_VARIANT=development expo start --dev-client",
     "android": "expo start --android",
     "web": "expo start --web",
     "lint": "expo lint",
