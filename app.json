@@ -7,6 +7,12 @@
     "icon": "./assets/images/icon.png",
     "scheme": "odyssey",
     "userInterfaceStyle": "automatic",
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/23127d40-d3ff-4b9a-8e8c-2f40d490227f"
+    },
     "android": {
       "package": "com.hxndev.odyssey",
       "adaptiveIcon": {
