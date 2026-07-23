@@ -5,7 +5,7 @@ import Animated, { FadeIn, FadeInDown } from "react-native-reanimated";
 import { AppText } from "@/components/ui/AppText";
 import { useTheme } from "@/hooks/useTheme";
 import { fonts } from "@/lib/theme";
-import { countryByIso } from "@/features/countries/data";
+import { countryByIso, searchCountries, type Country } from "@/features/countries/data";
 import { searchCities, type CityRecord } from "./data";
 
 export interface PickedCity {
@@ -25,40 +25,80 @@ interface CityPickerProps {
   title?: string;
 }
 
-/** Modal city search over the bundled dataset, with custom-city fallback. */
+/**
+ * Modal city search over the bundled dataset, with custom-city fallback.
+ * When unscoped (no countryIso), adding a custom city asks for its country
+ * in a second step so the entry still gets a flag and country grouping.
+ */
 export function CityPicker({ visible, onClose, onPick, countryIso, title = "Add city" }: CityPickerProps) {
   const { colors } = useTheme();
   const [query, setQuery] = useState("");
+  // When set, the modal is asking which country the custom city belongs to.
+  const [customName, setCustomName] = useState<string | null>(null);
 
-  const results = useMemo(() => searchCities(query, countryIso), [query, countryIso]);
+  const results = useMemo(
+    () => (customName ? [] : searchCities(query, countryIso)),
+    [query, countryIso, customName],
+  );
+  const countryResults = useMemo(
+    () => (customName ? searchCountries(query) : []),
+    [query, customName],
+  );
   const trimmed = query.trim();
+
+  const reset = () => {
+    setQuery("");
+    setCustomName(null);
+  };
+
+  const close = () => {
+    reset();
+    onClose();
+  };
 
   const pick = (city: CityRecord) => {
     onPick({ cityId: city.id, name: city.name, iso: city.iso, lat: city.lat, lng: city.lng });
-    setQuery("");
-    onClose();
+    close();
   };
 
   const pickCustom = () => {
-    if (!trimmed || !countryIso) return;
-    onPick({ cityId: null, name: trimmed, iso: countryIso, lat: null, lng: null });
-    setQuery("");
-    onClose();
+    if (!trimmed) return;
+    if (countryIso) {
+      onPick({ cityId: null, name: trimmed, iso: countryIso, lat: null, lng: null });
+      close();
+    } else {
+      // No country scope — ask which country the city is in first.
+      setCustomName(trimmed);
+      setQuery("");
+    }
+  };
+
+  const pickCustomCountry = (country: Country) => {
+    if (!customName) return;
+    onPick({ cityId: null, name: customName, iso: country.iso, lat: null, lng: null });
+    close();
   };
 
   return (
-    <Modal visible={visible} transparent animationType="none" onRequestClose={onClose}>
+    <Modal visible={visible} transparent animationType="none" onRequestClose={close}>
       <Animated.View entering={FadeIn.duration(150)} className="flex-1 bg-black/40 pt-24">
-        <Pressable className="absolute inset-0" onPress={onClose} />
+        <Pressable className="absolute inset-0" onPress={close} />
         <Animated.View
           entering={FadeInDown.duration(250).springify()}
           className="mx-4 max-h-[70%] rounded-card border border-line bg-paper-raised p-4 dark:border-line-dark dark:bg-paper-dark-raised"
         >
           <View className="mb-3 flex-row items-center justify-between">
-            <AppText variant="title" className="text-xl">
-              {title}
-            </AppText>
-            <Pressable onPress={onClose} className="p-1" accessibilityLabel="Close">
+            <View className="flex-1 flex-row items-center gap-2">
+              {customName ? (
+                <Pressable onPress={reset} className="p-1" accessibilityLabel="Back to city search">
+                  <Ionicons name="arrow-back" size={22} color={colors.inkSoft} />
+                </Pressable>
+              ) : null}
+              <AppText variant="title" className="text-xl" numberOfLines={1}>
+                {customName ? `Where is “${customName}”?` : title}
+              </AppText>
+            </View>
+            <Pressable onPress={close} className="p-1" accessibilityLabel="Close">
               <Ionicons name="close" size={22} color={colors.inkSoft} />
             </Pressable>
           </View>
@@ -69,13 +109,37 @@ export function CityPicker({ visible, onClose, onPick, countryIso, title = "Add 
               autoFocus
               value={query}
               onChangeText={setQuery}
-              placeholder={countryIso ? `Search cities in ${countryByIso.get(countryIso)?.name ?? countryIso}` : "Search cities"}
+              placeholder={
+                customName
+                  ? "Search countries"
+                  : countryIso
+                    ? `Search cities in ${countryByIso.get(countryIso)?.name ?? countryIso}`
+                    : "Search cities"
+              }
               placeholderTextColor={colors.inkFaint}
               style={{ fontFamily: fonts.sans, color: colors.ink }}
               className="h-12 flex-1 text-base"
             />
           </View>
 
+          {customName ? (
+            <FlatList
+              data={countryResults}
+              keyExtractor={(item) => item.iso}
+              keyboardShouldPersistTaps="handled"
+              renderItem={({ item }) => (
+                <Pressable
+                  onPress={() => pickCustomCountry(item)}
+                  className="flex-row items-center gap-3 border-b border-line py-3 dark:border-line-dark"
+                >
+                  <AppText className="text-xl">{item.flag}</AppText>
+                  <AppText variant="heading" className="flex-1 text-base">
+                    {item.name}
+                  </AppText>
+                </Pressable>
+              )}
+            />
+          ) : (
           <FlatList
             data={results}
             keyExtractor={(item) => String(item.id)}
@@ -101,7 +165,7 @@ export function CityPicker({ visible, onClose, onPick, countryIso, title = "Add 
               );
             }}
             ListFooterComponent={
-              trimmed && countryIso ? (
+              trimmed ? (
                 <Pressable onPress={pickCustom} className="flex-row items-center gap-3 py-3">
                   <Ionicons name="add-circle-outline" size={22} color={colors.primary} />
                   <AppText variant="heading" className="text-base text-primary dark:text-primary-dark">
@@ -118,6 +182,7 @@ export function CityPicker({ visible, onClose, onPick, countryIso, title = "Add 
               ) : null
             }
           />
+          )}
         </Animated.View>
       </Animated.View>
     </Modal>
