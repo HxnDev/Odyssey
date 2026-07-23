@@ -40,5 +40,11 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      # EXPO_PUBLIC_* vars are inlined into the JS bundle at publish time.
+      # Load them from eas.json (single source of truth) so OTA updates get
+      # the same values as EAS builds.
+      - name: Load public env from eas.json
+        run: jq -r '.build.base.env | to_entries[] | "\(.key)=\(.value)"' eas.json >> "$GITHUB_ENV"
+
       - name: Publish update
         run: eas update --channel ${{ github.event.inputs.channel || 'preview' }} --auto --non-interactive
