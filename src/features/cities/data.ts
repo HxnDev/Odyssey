@@ -1,4 +1,4 @@
-import citiesJson from "@/data/cities.json";
+import citiesJson from "@/data/cities.generated";
 import { countries } from "@/features/countries/data";
 
 export interface CityRecord {
@@ -14,7 +14,7 @@ export interface CityRecord {
 
 type CityTuple = [number, string, string, number, number, number, string?];
 
-/** Bundled GeoNames cities with population >= 5k, sorted by population desc. */
+/** Bundled GeoNames cities with population >= 1k, sorted by population desc. */
 export const cities: CityRecord[] = (citiesJson as CityTuple[]).map(
   ([id, name, iso, lat, lng, pop, alias]) => ({ id, name, iso, lat, lng, pop, alias }),
 );
@@ -31,9 +31,34 @@ function fold(text: string): string {
 let foldedNames: string[] | null = null;
 let countryIsosByFoldedName: [string, string][] | null = null;
 
+function foldCity(c: CityRecord): string {
+  return c.alias ? `${fold(c.name)}\n${fold(c.alias)}` : fold(c.name);
+}
+
 function ensureIndexes() {
-  foldedNames ??= cities.map((c) => (c.alias ? `${fold(c.name)}\n${fold(c.alias)}` : fold(c.name)));
+  // Length check guards against a stale index when the dataset is hot-swapped
+  // during development (Fast Refresh can keep module state across json updates).
+  if (!foldedNames || foldedNames.length !== cities.length) {
+    foldedNames = cities.map(foldCity);
+  }
   countryIsosByFoldedName ??= countries.map((c) => [fold(c.name), c.iso]);
+}
+
+let warnedIndexGap = false;
+
+/** Index lookup with self-heal: never lets a gap in the cache crash a search. */
+function foldedNameAt(i: number): string {
+  let name = foldedNames![i];
+  if (name === undefined) {
+    if (!warnedIndexGap) {
+      warnedIndexGap = true;
+      console.warn(
+        `[citySearch] index gap at ${i}: foldedNames.length=${foldedNames!.length}, cities.length=${cities.length}`,
+      );
+    }
+    name = foldedNames![i] = foldCity(cities[i]);
+  }
+  return name;
 }
 
 function matchesPrefix(foldedName: string, q: string): boolean {
@@ -62,7 +87,7 @@ export function searchCities(query: string, countryIso?: string, limit = 20): Ci
       if (prefix.length >= limit) break;
       continue;
     }
-    const name = foldedNames![i];
+    const name = foldedNameAt(i);
     if (matchesPrefix(name, q)) {
       prefix.push(city);
       if (prefix.length >= limit) break;
