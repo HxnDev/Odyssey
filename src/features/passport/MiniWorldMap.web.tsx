@@ -1,5 +1,5 @@
 import { View } from "react-native";
-import { BrowserMap } from "@/features/map/BrowserMap";
+import { BrowserMap } from "@/features/map/BrowserMap.web";
 import type { CountryVisitRow } from "@/lib/database.types";
 
 export function MiniWorldMap({ visits, height = 190 }: { visits: CountryVisitRow[]; height?: number }) {

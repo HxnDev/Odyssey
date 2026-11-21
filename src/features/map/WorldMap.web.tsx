@@ -1,1 +1,1 @@
-export { BrowserMap as WorldMap } from "./BrowserMap";
+export { BrowserMap as WorldMap } from "./BrowserMap.web";

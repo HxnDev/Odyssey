@@ -1,4 +1,4 @@
-import "./MapWebStyles.css";
+import "./MapWebStyles.web.css";
 
 import { Ionicons } from "@expo/vector-icons";
 import { forwardRef, useEffect, useImperativeHandle, useRef } from "react";

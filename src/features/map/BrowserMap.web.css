@@ -1,0 +1,71 @@
+.odyssey-browser-map {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+}
+
+.odyssey-browser-map svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
+}
+
+.odyssey-browser-map svg:active {
+  cursor: grabbing;
+}
+
+.odyssey-map-grid {
+  opacity: 0.32;
+  stroke-width: 0.5;
+}
+
+.odyssey-map-countries path,
+.odyssey-map-cities circle {
+  cursor: pointer;
+  transition: filter 140ms ease, fill 160ms ease;
+}
+
+.odyssey-map-countries path:hover {
+  filter: brightness(1.08);
+}
+
+.odyssey-map-labels {
+  pointer-events: none;
+  font: 600 8px Inter, system-ui, sans-serif;
+  letter-spacing: 0.02em;
+}
+
+.odyssey-map-zoom {
+  position: absolute;
+  right: 1.25rem;
+  bottom: 1.25rem;
+  display: grid;
+  overflow: hidden;
+  border: 1px solid rgb(127 105 89 / 25%);
+  border-radius: 0.9rem;
+  background: rgb(255 255 255 / 90%);
+  box-shadow: 0 8px 30px rgb(30 20 12 / 12%);
+  backdrop-filter: blur(14px);
+}
+
+.odyssey-map-zoom button {
+  width: 2.75rem;
+  height: 2.5rem;
+  border: 0;
+  border-bottom: 1px solid rgb(127 105 89 / 20%);
+  background: transparent;
+  color: #1b1410;
+  cursor: pointer;
+  font: 500 1.25rem/1 system-ui, sans-serif;
+}
+
+.odyssey-map-zoom button:last-child {
+  border-bottom: 0;
+}
+
+.odyssey-map-zoom button:hover {
+  background: #fff0e3;
+}
