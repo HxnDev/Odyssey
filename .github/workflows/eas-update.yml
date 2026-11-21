@@ -3,6 +3,17 @@ name: EAS Update
 on:
   push:
     branches: [main]
+    paths-ignore:
+      - "**/*.web.ts"
+      - "**/*.web.tsx"
+      - "**/*.web.css"
+      - "src/features/map/BrowserMap.tsx"
+      - "src/features/map/MapWebStyles.css"
+      - "docs/**"
+      - "README.md"
+      - "CHANGELOG.md"
+      - "vercel.json"
+      - ".github/workflows/eas-update.yml"
   workflow_dispatch:
     inputs:
       channel:
