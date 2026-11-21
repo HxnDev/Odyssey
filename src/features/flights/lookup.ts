@@ -1,3 +1,4 @@
+import { Platform } from "react-native";
 /**
  * Flight number intelligence, Flighty-style:
  * - Best source: AeroDataBox (RapidAPI key in EXPO_PUBLIC_AERODATABOX_KEY)
@@ -106,7 +107,7 @@ function formatAirport(a: AdsbdbAirport | undefined): string | null {
   return a.iata_code ? `${place} (${a.iata_code})` : place;
 }
 
-const AERODATABOX_KEY = process.env.EXPO_PUBLIC_AERODATABOX_KEY;
+const AERODATABOX_KEY = Platform.OS === "web" ? undefined : process.env.EXPO_PUBLIC_AERODATABOX_KEY;
 
 /** "2026-09-09 10:45+02:00" → "10:45" */
 function localHHMM(local: string | undefined): string | null {

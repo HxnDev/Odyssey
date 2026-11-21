@@ -14,6 +14,10 @@ type Filter = CountryStatus | "all" | "favorites";
 
 export default function CountriesScreen() {
   const router = useRouter();
+  const goBack = () => {
+    if (router.canGoBack()) router.back();
+    else router.replace("/passport");
+  };
   const { colors, scheme } = useTheme();
   const [query, setQuery] = useState("");
   const [filter, setFilter] = useState<Filter>("all");
@@ -33,7 +37,7 @@ export default function CountriesScreen() {
       <View className="gap-4 px-4 pb-3 pt-2">
         <View className="flex-row items-center gap-3">
           <Pressable
-            onPress={() => router.back()}
+            onPress={goBack}
             hitSlop={8}
             className="h-10 w-10 items-center justify-center rounded-full bg-paper-sunken dark:bg-paper-dark-sunken"
           >

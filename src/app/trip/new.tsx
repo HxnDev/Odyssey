@@ -1,7 +1,8 @@
+import { Alert } from "@/lib/alert";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { useState } from "react";
-import { Alert, Pressable, ScrollView, View } from "react-native";
+import { Pressable, ScrollView, View } from "react-native";
 import { AppText } from "@/components/ui/AppText";
 import { Button } from "@/components/ui/Button";
 import { CalendarField } from "@/components/ui/CalendarField";
@@ -16,6 +17,10 @@ const COVER_EMOJIS = ["✈️", "🏝️", "🏔️", "🏛️", "🎒", "🚐",
 
 export default function NewTripScreen() {
   const router = useRouter();
+  const goBack = () => {
+    if (router.canGoBack()) router.back();
+    else router.replace("/trips");
+  };
   const { colors } = useTheme();
   const createTrip = useCreateTrip();
 
@@ -54,7 +59,7 @@ export default function NewTripScreen() {
   return (
     <Screen>
       <View className="flex-row items-center gap-2 px-4 pb-2 pt-2">
-        <Pressable onPress={() => router.back()} className="p-2" accessibilityLabel="Go back">
+        <Pressable onPress={goBack} className="p-2" accessibilityLabel="Go back">
           <Ionicons name="arrow-back" size={24} color={colors.ink} />
         </Pressable>
         <AppText variant="title" className="flex-1">

@@ -1,4 +1,4 @@
-import type { BottomSheetModal } from "@gorhom/bottom-sheet";
+import type { CountrySheetHandle } from "@/features/map/CountrySheetFrame";
 import { Ionicons } from "@expo/vector-icons";
 import type { CameraRef } from "@maplibre/maplibre-react-native";
 import { useRouter } from "expo-router";
@@ -20,7 +20,7 @@ export default function MapScreen() {
   const router = useRouter();
   const { colors } = useTheme();
   const cameraRef = useRef<CameraRef>(null);
-  const sheetRef = useRef<BottomSheetModal>(null);
+  const sheetRef = useRef<CountrySheetHandle>(null);
   const [selected, setSelected] = useState<Country | null>(null);
   const [mode, setMode] = useState<MapViewMode>("countries");
   const { data: visits = [] } = useCountryVisits();
@@ -60,7 +60,7 @@ export default function MapScreen() {
       <View
         pointerEvents="box-none"
         style={{ paddingTop: insets.top + 8 }}
-        className="absolute inset-x-0 top-0 px-4"
+        className="absolute inset-x-0 top-0 px-4 web:mx-auto web:w-full web:max-w-xl"
       >
         <MapSearchBar onSelect={(country) => openCountry(country, true)} />
 

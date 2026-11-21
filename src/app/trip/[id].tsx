@@ -1,8 +1,9 @@
+import { Alert } from "@/lib/alert";
 import { Ionicons } from "@expo/vector-icons";
 import { Image } from "expo-image";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useRef, useState } from "react";
-import { ActivityIndicator, Alert, KeyboardAvoidingView, Pressable, ScrollView, TextInput, View } from "react-native";
+import { ActivityIndicator, KeyboardAvoidingView, Pressable, ScrollView, TextInput, View } from "react-native";
 import { AppText } from "@/components/ui/AppText";
 import { Button } from "@/components/ui/Button";
 import { CalendarField } from "@/components/ui/CalendarField";
@@ -35,6 +36,10 @@ import { fonts } from "@/lib/theme";
 export default function TripDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
+  const goBack = () => {
+    if (router.canGoBack()) router.back();
+    else router.replace("/trips");
+  };
   const { colors } = useTheme();
   const { session } = useAuth();
   const { trip } = useTrip(id ?? "");
@@ -63,7 +68,7 @@ export default function TripDetailScreen() {
   if (!trip) {
     return (
       <Screen>
-        <EmptyState emoji="🧳" title="Trip not found" actionTitle="Go back" onAction={() => router.back()} />
+        <EmptyState emoji="🧳" title="Trip not found" actionTitle="Go back" onAction={goBack} />
       </Screen>
     );
   }
@@ -136,7 +141,7 @@ export default function TripDetailScreen() {
         onPress: async () => {
           if (session) void deleteCoverPhoto(session.user.id, trip.id);
           await deleteTrip.mutateAsync(trip.id);
-          router.back();
+          goBack();
         },
       },
     ]);
@@ -145,7 +150,7 @@ export default function TripDetailScreen() {
   return (
     <Screen>
       <View className="flex-row items-center gap-2 px-4 pb-2 pt-2">
-        <Pressable onPress={() => router.back()} className="p-2" accessibilityLabel="Go back">
+        <Pressable onPress={goBack} className="p-2" accessibilityLabel="Go back">
           <Ionicons name="arrow-back" size={24} color={colors.ink} />
         </Pressable>
         <TextInput

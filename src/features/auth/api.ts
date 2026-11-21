@@ -1,18 +1,21 @@
+import { Platform } from "react-native";
 import * as Linking from "expo-linking";
 import * as WebBrowser from "expo-web-browser";
 import { makeRedirectUri } from "expo-auth-session";
 import { supabase } from "@/lib/supabase";
 
-WebBrowser.maybeCompleteAuthSession();
-
-const redirectTo = makeRedirectUri({ scheme: "odyssey" });
+function authRedirect(path = "") {
+  if (Platform.OS === "web") return new URL(`/${path}`, window.location.origin).href;
+  const nativeRedirect = makeRedirectUri({ scheme: "odyssey" });
+  return path ? `${nativeRedirect}${path}` : nativeRedirect;
+}
 
 export async function signUpWithEmail(email: string, password: string, displayName: string) {
   const { error } = await supabase.auth.signUp({
     email,
     password,
     options: {
-      emailRedirectTo: redirectTo,
+      emailRedirectTo: authRedirect(),
       data: { display_name: displayName },
     },
   });
@@ -26,7 +29,7 @@ export async function signInWithEmail(email: string, password: string) {
 
 export async function sendPasswordReset(email: string) {
   const { error } = await supabase.auth.resetPasswordForEmail(email, {
-    redirectTo: `${redirectTo}reset-password`,
+    redirectTo: authRedirect("reset-password"),
   });
   if (error) throw error;
 }
@@ -52,11 +55,14 @@ export async function deleteAccount() {
  * Requires the Google provider to be enabled in the Supabase dashboard.
  */
 export async function signInWithGoogle() {
+  const redirectTo = authRedirect();
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider: "google",
-    options: { redirectTo, skipBrowserRedirect: true },
+    options: { redirectTo, skipBrowserRedirect: Platform.OS !== "web" },
   });
   if (error) throw error;
+
+  if (Platform.OS === "web") return true;
 
   const result = await WebBrowser.openAuthSessionAsync(data.url, redirectTo);
   if (result.type !== "success") return false;

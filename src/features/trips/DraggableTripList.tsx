@@ -33,7 +33,7 @@ export interface DragScrollTarget {
   maxOffset: SharedValue<number>;
 }
 
-interface DraggableTripListProps {
+export interface DraggableTripListProps {
   trips: TripRow[];
   countryByTrip: Map<string, string>;
   /** Called with the full id list in its new order after a drop. */

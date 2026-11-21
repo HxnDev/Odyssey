@@ -26,6 +26,10 @@ import {
 export default function CountryDetailScreen() {
   const { iso } = useLocalSearchParams<{ iso: string }>();
   const router = useRouter();
+  const goBack = () => {
+    if (router.canGoBack()) router.back();
+    else router.replace("/");
+  };
   const { colors, scheme } = useTheme();
   const country = countryByIso.get(iso?.toUpperCase() ?? "");
   const { visit } = useVisitByIso(country?.iso ?? "");
@@ -58,7 +62,7 @@ export default function CountryDetailScreen() {
           emoji="🗺️"
           title="Country not found"
           actionTitle="Go back"
-          onAction={() => router.back()}
+          onAction={goBack}
         />
       </Screen>
     );
@@ -69,7 +73,7 @@ export default function CountryDetailScreen() {
   return (
     <Screen>
       <View className="flex-row items-center gap-2 px-4 pb-2 pt-2">
-        <Pressable onPress={() => router.back()} className="p-2" accessibilityLabel="Go back">
+        <Pressable onPress={goBack} className="p-2" accessibilityLabel="Go back">
           <Ionicons name="arrow-back" size={24} color={colors.ink} />
         </Pressable>
         <AppText variant="title" className="flex-1" numberOfLines={1}>

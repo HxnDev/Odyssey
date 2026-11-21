@@ -16,6 +16,10 @@ type Filter = "earned" | "all";
 
 export default function StampsScreen() {
   const router = useRouter();
+  const goBack = () => {
+    if (router.canGoBack()) router.back();
+    else router.replace("/passport");
+  };
   const { colors } = useTheme();
   const [filter, setFilter] = useState<Filter>("earned");
   const { data: visits = [] } = useCountryVisits();
@@ -34,7 +38,7 @@ export default function StampsScreen() {
   return (
     <Screen>
       <View className="flex-row items-center gap-2 px-4 pb-2 pt-2">
-        <Pressable onPress={() => router.back()} className="p-2" accessibilityLabel="Go back">
+        <Pressable onPress={goBack} className="p-2" accessibilityLabel="Go back">
           <Ionicons name="arrow-back" size={24} color={colors.ink} />
         </Pressable>
         <View className="flex-1">

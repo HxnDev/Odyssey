@@ -1,4 +1,4 @@
-import { BottomSheetModal, BottomSheetScrollView } from "@gorhom/bottom-sheet";
+import { CountrySheetFrame, type CountrySheetHandle } from "./CountrySheetFrame";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { forwardRef, useMemo } from "react";
@@ -17,7 +17,7 @@ interface CountrySheetProps {
   onDismiss: () => void;
 }
 
-export const CountrySheet = forwardRef<BottomSheetModal, CountrySheetProps>(
+export const CountrySheet = forwardRef<CountrySheetHandle, CountrySheetProps>(
   function CountrySheet({ country, onDismiss }, ref) {
     const router = useRouter();
     const { colors, scheme } = useTheme();
@@ -55,25 +55,16 @@ export const CountrySheet = forwardRef<BottomSheetModal, CountrySheetProps>(
       return rows.sort((a, b) => Number(!!b.visit) - Number(!!a.visit));
     }, [country, cityVisits]);
 
-    if (!country) return null;
-
     const status = visit?.status ?? null;
     const visitedSelected = status === "visited";
     const wishlistSelected = status === "wishlist";
 
     const toggleStatus = (target: "visited" | "wishlist") =>
-      setStatus.mutate({ iso: country.iso, status: status === target ? null : target });
+      country && setStatus.mutate({ iso: country.iso, status: status === target ? null : target });
 
     return (
-      <BottomSheetModal
-        ref={ref}
-        onDismiss={onDismiss}
-        snapPoints={["62%", "88%"]}
-        enableDynamicSizing={false}
-        backgroundStyle={{ backgroundColor: colors.paperRaised, borderRadius: 28 }}
-        handleIndicatorStyle={{ backgroundColor: colors.line }}
-      >
-        <BottomSheetScrollView contentContainerStyle={{ paddingHorizontal: 24, paddingBottom: 48 }}>
+      <CountrySheetFrame ref={ref} onDismiss={onDismiss}>
+        {country && <>
           {/* Header */}
           <View className="flex-row items-center gap-3 pb-4 pt-1">
             <AppText className="text-4xl">{country.flag}</AppText>
@@ -247,8 +238,8 @@ export const CountrySheet = forwardRef<BottomSheetModal, CountrySheetProps>(
               </View>
             ))
           )}
-        </BottomSheetScrollView>
-      </BottomSheetModal>
+        </>}
+      </CountrySheetFrame>
     );
   },
 );

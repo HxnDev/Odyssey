@@ -13,7 +13,7 @@ export function Screen({ className, style, noTopInset, ...props }: ScreenProps) 
   return (
     <View
       style={[{ paddingTop: noTopInset ? 0 : insets.top }, style]}
-      className={cn("flex-1 bg-paper dark:bg-paper-dark", className)}
+      className={cn("flex-1 bg-paper dark:bg-paper-dark web:mx-auto web:w-full web:max-w-4xl", className)}
       {...props}
     />
   );

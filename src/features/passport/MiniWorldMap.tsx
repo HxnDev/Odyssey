@@ -5,8 +5,7 @@ import { useTheme } from "@/hooks/useTheme";
 import type { CountryVisitRow } from "@/lib/database.types";
 import { buildFillColorExpression } from "@/features/map/expressions";
 import { buildBaseStyle } from "@/features/map/mapStyle";
-
-const worldGeoJson = require("@/assets/geo/countries.geo.json") as GeoJSON.FeatureCollection;
+import { worldGeoJson } from "@/features/map/geometry";
 
 /**
  * Non-interactive world map preview for the passport screen — the "where have

@@ -1,0 +1,16 @@
+.odyssey-country-dialog {
+  box-sizing: border-box;
+  width: min(32rem, calc(100% - 2rem));
+  max-height: 85dvh;
+  padding: 1rem 1.5rem 1.5rem;
+  border: 1px solid;
+  border-radius: 1.75rem;
+}
+
+.odyssey-country-dialog::backdrop {
+  background: rgb(21 16 11 / 45%);
+}
+
+#odyssey-map-search:not(:focus-within) #odyssey-map-results {
+  display: none;
+}

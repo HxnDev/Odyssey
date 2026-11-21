@@ -2,6 +2,10 @@
 
 **Every journey matters.** A premium personal travel companion — your permanent archive of every place you've ever visited.
 
+## Web
+
+Run `npm run web` with your Supabase variables configured in `.env`. The browser app shares Odyssey's travel features and theme with the mobile app. See [web deployment setup](docs/deploy-web.md) for Vercel, Namecheap, and sign-in configuration.
+
 ## Showcase
 
 <p align="center">
@@ -26,14 +30,14 @@
 - **Stamps** — a procedurally generated retro passport stamp for every visited country.
 - **Search everywhere** — country search on the map; accent-insensitive city search over a bundled ~49k-city dataset (also matches country names, e.g. "Switzerland" lists Swiss cities, and English exonyms like Geneva → Genève).
 - **Fast date picking** — custom calendar with a year grid → month grid drill-down, so dates years back are three taps away.
-- **Offline-first** — the map, country/city/airport datasets and the query cache all work without a connection; changes sync when back online.
+- **Offline-first on mobile** — the map, country/city/airport datasets and the query cache all work without a connection; changes sync when back online.
 - **Theming** — signature "Sunset Orange" palette: vibrant orange on clean white, with an ember-black dark mode. Instant theme switching (maps included).
 
 ## Tech stack
 
 - **Expo SDK 56** + TypeScript + Expo Router (file-based routing, `src/app/`)
 - **NativeWind v4** (Tailwind) with custom design tokens; Space Grotesk + Inter typography
-- **MapLibre React Native** — self-contained world map rendered from bundled Natural Earth polygons (no tile servers, no API keys)
+- **MapLibre React Native and MapLibre GL JS** — self-contained world map rendered from bundled Natural Earth polygons (no tile servers, no API keys)
 - **Supabase** — auth (email + Google OAuth), Postgres with row-level security, Storage for trip cover photos
 - **TanStack Query** (server state, optimistic updates, offline persistence), **Zustand** (client state), **React Hook Form + Zod** (forms)
 - **Reanimated + Gesture Handler** — UI-thread drag & drop, springs, transitions
