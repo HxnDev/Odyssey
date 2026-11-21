@@ -4,7 +4,7 @@ Odyssey's web app uses the same Supabase project as the mobile app. Its producti
 
 ## GitHub and Vercel
 
-1. Push the branch containing the web changes. For the first web launch, deploy `feat/odyssey-web` directly. Odyssey's existing GitHub workflow publishes a mobile OTA when `main` receives a push.
+1. Push the branch containing the web changes. For a web-only deployment, deploy your web branch directly. Odyssey's existing GitHub workflow publishes a mobile OTA when `main` receives a push.
 2. In Vercel, select **Add New → Project** and import `HxnDev/Odyssey`. Use the repository root, the **Other** framework preset, and Node.js **22.x**. The repository's `vercel.json` sets the build command and output directory and handles direct visits to routes such as `/trip/<id>`.
 3. Add `EXPO_PUBLIC_SUPABASE_URL` and `EXPO_PUBLIC_SUPABASE_ANON_KEY` under **Settings → Environment Variables** for Production, and for Preview if you plan to test there. Use the existing Odyssey project URL and its public anon or publishable key. Keep the service role key, Google client secret, and RapidAPI key out of the web project's environment.
 4. Under **Settings → Environments → Production → Branch Tracking**, select the branch with the web changes. Start a deployment from that branch if Vercel has only deployed the old default branch. If the variables were added after a deployment was created, redeploy so the build gets them.
@@ -20,7 +20,9 @@ Open **Domain List → hxndev.com → Manage → Advanced DNS → Host Records**
 
 ## Supabase Auth
 
-In the existing Odyssey project, open **Authentication → URL Configuration** and add these **Redirect URLs** alongside the existing mobile entries:
+In the existing Odyssey project, open **Authentication → URL Configuration**. Set **Site URL** to `https://odyssey.hxndev.com` and save. Supabase uses this address as its fallback when a requested redirect is missing or falls outside the allowed URLs. Leaving it at `http://localhost:3000` can send users to localhost after Google sign-in.
+
+Add the following **Redirect URLs** alongside the existing mobile entries:
 
 - `https://odyssey.hxndev.com/`
 - `https://odyssey.hxndev.com/reset-password`

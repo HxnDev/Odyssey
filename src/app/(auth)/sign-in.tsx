@@ -2,7 +2,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Link } from "expo-router";
 import { useState } from "react";
 import { Controller, useForm } from "react-hook-form";
-import { Pressable, View } from "react-native";
+import { Platform, Pressable, View } from "react-native";
 import { z } from "zod";
 import { AppText } from "@/components/ui/AppText";
 import { Button } from "@/components/ui/Button";
@@ -50,9 +50,21 @@ export default function SignInScreen() {
     }
   };
 
+  const web = Platform.OS === "web";
+
   return (
     <AuthScreenShell title="Odyssey" subtitle="Every journey matters. Welcome back.">
       <View className="gap-4">
+        {web && (
+          <>
+            <Button title="Continue with Google" loading={googleLoading} disabled={isSubmitting} onPress={onGoogle} />
+            <View className="flex-row items-center gap-3 py-1">
+              <View className="h-px flex-1 bg-line dark:bg-line-dark" />
+              <AppText variant="caption">or sign in with email</AppText>
+              <View className="h-px flex-1 bg-line dark:bg-line-dark" />
+            </View>
+          </>
+        )}
         <Controller
           control={control}
           name="email"
@@ -99,13 +111,8 @@ export default function SignInScreen() {
           </AppText>
         ) : null}
 
-        <Button title="Sign in" loading={isSubmitting} onPress={handleSubmit(onSubmit)} />
-        <Button
-          title="Continue with Google"
-          variant="secondary"
-          loading={googleLoading}
-          onPress={onGoogle}
-        />
+        <Button title="Sign in" variant={web ? "secondary" : "primary"} loading={isSubmitting} disabled={web && googleLoading} onPress={handleSubmit(onSubmit)} />
+        {!web && <Button title="Continue with Google" variant="secondary" loading={googleLoading} onPress={onGoogle} />}
 
         <View className="mt-4 flex-row justify-center gap-1">
           <AppText variant="label">New here?</AppText>

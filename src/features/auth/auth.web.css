@@ -1,0 +1,91 @@
+.odyssey-auth {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  font-family: var(--auth-body), system-ui, sans-serif;
+  background: var(--auth-paper);
+  color: var(--auth-ink);
+}
+
+.odyssey-auth-cover {
+  position: relative;
+  isolation: isolate;
+  display: flex;
+  align-items: end;
+  overflow: hidden;
+  min-height: 100%;
+  padding: clamp(2rem, 5vw, 6rem);
+  background: radial-gradient(ellipse at 36% 30%, #a04620 0%, #69311e 42%, #281813 87%);
+  color: #fff2e6;
+}
+
+.odyssey-auth-atlas {
+  position: absolute;
+  inset: 4% -21% auto;
+  width: 142%;
+  height: 72%;
+  object-fit: contain;
+  z-index: -1;
+  mask-image: linear-gradient(black 65%, transparent);
+}
+
+.odyssey-auth-cover-copy p {
+  max-width: 10ch;
+  margin: 0 0 1rem;
+  font: 700 clamp(2.8rem, 5.5vw, 6rem) / 0.97 var(--auth-display), system-ui, sans-serif;
+  letter-spacing: -0.065em;
+}
+
+.odyssey-auth-cover-copy span {
+  display: block;
+  max-width: 29ch;
+  color: #f5d4c0;
+  font-size: 1rem;
+  line-height: 1.6;
+}
+
+.odyssey-auth-content {
+  display: grid;
+  place-items: center;
+  padding: clamp(1.5rem, 4vw, 4rem);
+}
+
+.odyssey-auth-card {
+  width: min(100%, 25rem);
+}
+
+.odyssey-auth-brand {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  margin-bottom: 2rem;
+  font: 700 1.125rem var(--auth-display), system-ui, sans-serif;
+}
+
+.odyssey-auth-card header {
+  margin-bottom: 1.5rem;
+}
+
+.odyssey-auth-card h1 {
+  margin: 0;
+  font: 700 clamp(2rem, 4vw, 3rem) / 1.1 var(--auth-display), system-ui, sans-serif;
+  letter-spacing: -0.05em;
+}
+
+.odyssey-auth-card header p {
+  margin: 0.5rem 0 0;
+  color: var(--auth-muted);
+  line-height: 1.5;
+}
+
+@media (max-width: 760px) {
+  .odyssey-auth {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .odyssey-auth-cover {
+    display: none;
+  }
+}

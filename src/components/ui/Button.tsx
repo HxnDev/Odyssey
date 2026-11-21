@@ -1,4 +1,4 @@
-import { ActivityIndicator, Pressable, type PressableProps } from "react-native";
+import { ActivityIndicator, Platform, Pressable, type PressableProps } from "react-native";
 import Animated, { useAnimatedStyle, useSharedValue, withSpring } from "react-native-reanimated";
 import { AppText } from "./AppText";
 import { cn } from "@/lib/cn";
@@ -41,13 +41,16 @@ export function Button({ title, variant = "primary", loading, disabled, classNam
         : "#FFFFFF"
       : colors.primary;
 
+  const web = Platform.OS === "web";
+  const Control = web ? Pressable : AnimatedPressable;
+
   return (
-    <AnimatedPressable
+    <Control
       accessibilityRole="button"
       disabled={disabled || loading}
-      onPressIn={() => scale.set(withSpring(0.97, { damping: 20, stiffness: 400 }))}
-      onPressOut={() => scale.set(withSpring(1, { damping: 20, stiffness: 400 }))}
-      style={animatedStyle}
+      onPressIn={web ? undefined : () => scale.set(withSpring(0.97, { damping: 20, stiffness: 400 }))}
+      onPressOut={web ? undefined : () => scale.set(withSpring(1, { damping: 20, stiffness: 400 }))}
+      style={web ? undefined : animatedStyle}
       className={cn(
         "h-13 flex-row items-center justify-center rounded-2xl px-6 py-3.5",
         containerClasses[variant],
@@ -57,10 +60,10 @@ export function Button({ title, variant = "primary", loading, disabled, classNam
       {...props}
     >
       {loading ? (
-        <ActivityIndicator color={spinnerColor} />
+        <ActivityIndicator color={web && variant === "primary" ? "#1B1410" : spinnerColor} />
       ) : (
-        <AppText className={cn("text-base", textClasses[variant])}>{title}</AppText>
+        <AppText className={cn("text-base", textClasses[variant])} style={web && variant === "primary" ? { color: "#1B1410" } : undefined}>{title}</AppText>
       )}
-    </AnimatedPressable>
+    </Control>
   );
 }
