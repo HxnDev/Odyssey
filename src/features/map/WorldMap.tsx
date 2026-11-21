@@ -9,27 +9,13 @@ import { forwardRef, useMemo } from "react";
 import { StyleSheet } from "react-native";
 import { useTheme } from "@/hooks/useTheme";
 import type { CityVisitRow, CountryVisitRow } from "@/lib/database.types";
-import { countries } from "@/features/countries/data";
+import { buildCityPoints, labelPoints, worldGeoJson } from "./geometry";
 import { buildFillColorExpression } from "./expressions";
 import { buildBaseStyle, MAP_FONT } from "./mapStyle";
 
 export type MapViewMode = "countries" | "cities";
 
-// Bundled world polygons (Natural Earth 1:50m via world-atlas, keyed by ISO alpha-2).
-const worldGeoJson = require("@/assets/geo/countries.geo.json") as GeoJSON.FeatureCollection;
-
-// One label point per country, placed at its centroid. Larger countries get
-// their names earlier (lower zoom) via symbol-sort-key + collision detection.
-const labelPoints: GeoJSON.FeatureCollection = {
-  type: "FeatureCollection",
-  features: countries.map((c) => ({
-    type: "Feature",
-    properties: { iso: c.iso, name: c.name, area: c.area },
-    geometry: { type: "Point", coordinates: [c.lng, c.lat] },
-  })),
-};
-
-interface WorldMapProps {
+export interface WorldMapProps {
   visits: CountryVisitRow[];
   selectedIso: string | null;
   onCountryPress: (iso: string) => void;
@@ -48,19 +34,7 @@ export const WorldMap = forwardRef<CameraRef, WorldMapProps>(function WorldMap(
   const baseStyle = useMemo(() => buildBaseStyle(scheme), [scheme]);
   const fillColor = useMemo(() => buildFillColorExpression(visits, scheme), [visits, scheme]);
 
-  const cityPoints = useMemo<GeoJSON.FeatureCollection>(
-    () => ({
-      type: "FeatureCollection",
-      features: cityVisits
-        .filter((c) => c.lat != null && c.lng != null)
-        .map((c) => ({
-          type: "Feature",
-          properties: { id: c.id, name: c.name },
-          geometry: { type: "Point", coordinates: [c.lng as number, c.lat as number] },
-        })),
-    }),
-    [cityVisits],
-  );
+  const cityPoints = useMemo(() => buildCityPoints(cityVisits), [cityVisits]);
 
   return (
     <MapLibreMap

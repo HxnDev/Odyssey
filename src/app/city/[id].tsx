@@ -1,7 +1,8 @@
+import { Alert } from "@/lib/alert";
 import { Ionicons } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useState } from "react";
-import { Alert, Pressable, ScrollView, TextInput, View } from "react-native";
+import { Pressable, ScrollView, TextInput, View } from "react-native";
 import { AppText } from "@/components/ui/AppText";
 import { Button } from "@/components/ui/Button";
 import { CalendarField } from "@/components/ui/CalendarField";
@@ -17,6 +18,10 @@ import { fonts } from "@/lib/theme";
 export default function CityDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
+  const goBack = () => {
+    if (router.canGoBack()) router.back();
+    else router.replace("/");
+  };
   const { colors } = useTheme();
   const { city } = useCityVisit(id ?? "");
   const updateCity = useUpdateCityVisit();
@@ -32,7 +37,7 @@ export default function CityDetailScreen() {
   if (!city) {
     return (
       <Screen>
-        <EmptyState emoji="🏙️" title="City not found" actionTitle="Go back" onAction={() => router.back()} />
+        <EmptyState emoji="🏙️" title="City not found" actionTitle="Go back" onAction={goBack} />
       </Screen>
     );
   }
@@ -47,7 +52,7 @@ export default function CityDetailScreen() {
         style: "destructive",
         onPress: async () => {
           await deleteCity.mutateAsync(city.id);
-          router.back();
+          goBack();
         },
       },
     ]);
@@ -56,7 +61,7 @@ export default function CityDetailScreen() {
   return (
     <Screen>
       <View className="flex-row items-center gap-2 px-4 pb-2 pt-2">
-        <Pressable onPress={() => router.back()} className="p-2" accessibilityLabel="Go back">
+        <Pressable onPress={goBack} className="p-2" accessibilityLabel="Go back">
           <Ionicons name="arrow-back" size={24} color={colors.ink} />
         </Pressable>
         <AppText variant="title" className="flex-1" numberOfLines={1}>

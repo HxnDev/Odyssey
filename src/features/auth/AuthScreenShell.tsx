@@ -21,7 +21,7 @@ export function AuthScreenShell({ title, subtitle, children }: AuthScreenShellPr
           contentContainerClassName="flex-grow justify-center px-6 py-10"
           keyboardShouldPersistTaps="handled"
         >
-          <Animated.View entering={FadeInDown.duration(500).springify()}>
+          <Animated.View entering={FadeInDown.duration(500).springify()} className="web:mx-auto web:w-full web:max-w-md">
             <View className="mb-10 items-start gap-2">
               <AppText className="text-4xl">🧭</AppText>
               <AppText variant="display">{title}</AppText>

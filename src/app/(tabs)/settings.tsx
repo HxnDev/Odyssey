@@ -1,6 +1,7 @@
+import { Alert } from "@/lib/alert";
 import { Ionicons } from "@expo/vector-icons";
 import { useState } from "react";
-import { Alert, ScrollView, Share, View } from "react-native";
+import { Platform, ScrollView, Share, View } from "react-native";
 import { supabase } from "@/lib/supabase";
 import { AppText } from "@/components/ui/AppText";
 import { Button } from "@/components/ui/Button";
@@ -48,10 +49,17 @@ export default function SettingsScreen() {
         trips: trips.data,
         tripStops: tripStops.data,
       };
-      await Share.share({
-        title: "Odyssey travel data",
-        message: JSON.stringify(payload, null, 2),
-      });
+      const json = JSON.stringify(payload, null, 2);
+      if (Platform.OS === "web") {
+        const url = URL.createObjectURL(new Blob([json], { type: "application/json" }));
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = "odyssey-travel-data.json";
+        link.click();
+        window.setTimeout(() => URL.revokeObjectURL(url), 1000);
+      } else {
+        await Share.share({ title: "Odyssey travel data", message: json });
+      }
     } catch (error) {
       Alert.alert("Export failed", error instanceof Error ? error.message : "Try again.");
     } finally {

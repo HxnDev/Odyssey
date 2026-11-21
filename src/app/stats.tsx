@@ -22,6 +22,10 @@ const CONTINENT_COLORS = ["#FF6B00", "#E8175D", "#F5A623", "#1F9E8B", "#2B7FDB",
 
 export default function StatsScreen() {
   const router = useRouter();
+  const goBack = () => {
+    if (router.canGoBack()) router.back();
+    else router.replace("/passport");
+  };
   const { colors } = useTheme();
   const { data: countryVisits = [] } = useCountryVisits();
   const { data: cityVisits = [] } = useCityVisits();
@@ -49,7 +53,7 @@ export default function StatsScreen() {
     <Screen>
       <View className="flex-row items-center gap-3 px-4 pb-2 pt-2">
         <Pressable
-          onPress={() => router.back()}
+          onPress={goBack}
           hitSlop={8}
           className="h-10 w-10 items-center justify-center rounded-full bg-paper-sunken dark:bg-paper-dark-sunken"
         >

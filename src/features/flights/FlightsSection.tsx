@@ -1,8 +1,8 @@
+import { Alert } from "@/lib/alert";
 import { Ionicons } from "@expo/vector-icons";
 import { useEffect, useRef, useState, type RefObject } from "react";
 import {
   ActivityIndicator,
-  Alert,
   Dimensions,
   Keyboard,
   Pressable,

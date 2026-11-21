@@ -11,25 +11,22 @@ import {
   Inter_700Bold,
   useFonts,
 } from "@expo-google-fonts/inter";
-import { BottomSheetModalProvider } from "@gorhom/bottom-sheet";
-import AsyncStorage from "@react-native-async-storage/async-storage";
-import { createAsyncStoragePersister } from "@tanstack/query-async-storage-persister";
-import { PersistQueryClientProvider } from "@tanstack/react-query-persist-client";
+import { MapSheetProvider } from "@/features/map/MapSheetProvider";
 import { Stack } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { StatusBar } from "expo-status-bar";
 import { colorScheme as nativewindColorScheme } from "nativewind";
 import { useEffect } from "react";
-import { View } from "react-native";
+import { Platform, View } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { AuthProvider, useAuth } from "@/features/auth/AuthProvider";
 import { useOtaUpdates } from "@/hooks/useOtaUpdates";
 import { useTheme } from "@/hooks/useTheme";
-import { queryClient } from "@/lib/queryClient";
+import { TravelQueryProvider } from "@/lib/TravelQueryProvider";
 import { usePreferences } from "@/stores/preferences";
 
-SplashScreen.preventAutoHideAsync();
+if (Platform.OS !== "web") SplashScreen.preventAutoHideAsync();
 
 function RootNavigator() {
   const { session, ready } = useAuth();
@@ -41,7 +38,7 @@ function RootNavigator() {
   }, [themePreference]);
 
   useEffect(() => {
-    if (ready) SplashScreen.hideAsync();
+    if (ready && Platform.OS !== "web") SplashScreen.hideAsync();
   }, [ready]);
 
   if (!ready) return null;
@@ -69,16 +66,13 @@ function RootNavigator() {
         <Stack.Protected guard={!session}>
           <Stack.Screen name="(auth)" />
         </Stack.Protected>
+        <Stack.Protected guard={Platform.OS === "web"}>
+          <Stack.Screen name="reset-password" />
+        </Stack.Protected>
       </Stack>
     </View>
   );
 }
-
-// Query cache persists to AsyncStorage so travel data stays viewable offline.
-const queryPersister = createAsyncStoragePersister({
-  storage: AsyncStorage,
-  key: "odyssey-query-cache",
-});
 
 export default function RootLayout() {
   useOtaUpdates();
@@ -97,16 +91,13 @@ export default function RootLayout() {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <SafeAreaProvider>
-        <PersistQueryClientProvider
-          client={queryClient}
-          persistOptions={{ persister: queryPersister, maxAge: 7 * 24 * 60 * 60 * 1000 }}
-        >
-          <AuthProvider>
-            <BottomSheetModalProvider>
+        <AuthProvider>
+          <TravelQueryProvider>
+            <MapSheetProvider>
               <RootNavigator />
-            </BottomSheetModalProvider>
-          </AuthProvider>
-        </PersistQueryClientProvider>
+            </MapSheetProvider>
+          </TravelQueryProvider>
+        </AuthProvider>
       </SafeAreaProvider>
     </GestureHandlerRootView>
   );
